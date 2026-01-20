@@ -10,6 +10,7 @@ public class LoginPage extends JFrame {
     private List<User> users;
 
     public LoginPage(){
+        
         users = User.loadData("src/main/data/user_account.txt");
         initFrame();
     }

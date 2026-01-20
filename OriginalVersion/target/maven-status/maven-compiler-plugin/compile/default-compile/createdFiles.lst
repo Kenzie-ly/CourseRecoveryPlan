@@ -4,6 +4,7 @@ StudentEligibilityPage.class
 UserManagementPage.class
 EmailSender$1.class
 Student.class
+AcademicOfficer.class
 CourseAdminPage.class
 Main.class
 Course.class
@@ -13,6 +14,7 @@ CourseRecoveryPage.class
 CourseRecoveryReport.class
 LoginPage.class
 ResourceManager.class
+CRS.class
 RecoveryTask.class
 EmailSender$2.class
 Major.class
