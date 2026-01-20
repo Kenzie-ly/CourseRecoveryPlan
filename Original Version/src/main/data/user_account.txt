@@ -1,0 +1,6 @@
+Username	Password	FirstName	Lastname	Email	Role	LastLogin	LastLogout
+admin1	abc123	Richardo	Osmond	admin1@university.edu.my	Admin	1765726861155	1765726879529
+admin2	abc456	Ahmed	Yumnu	yumnu@university.edu.my	Admin	1765294017094	1765293816851
+officer1	defdef123	Thivedraan	Jambu	thivedraan@university.edu.my	AcademicOfficer	1765713849909	1765713210342
+officer2	defdef789	Jin	An	jintech674@gmail.com	AcademicOfficer	1765726818516	1765726854518
+Kenzie	uadkajdsaknjdsdasda	Kenzie	Nathan	kenzienathan@university.edu.my	AcademicOfficer	null	null

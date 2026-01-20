@@ -1,0 +1,3 @@
+Week|Task|Component|Deadline|CourseID|Completed|Grade
+Week 1|Recover failed component: Exam (Course C180 - Software Engineering)|Exam|||0|
+Week 1|hello|Exam|2025-12-12||0|

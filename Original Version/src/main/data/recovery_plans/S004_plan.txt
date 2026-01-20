@@ -1,0 +1,3 @@
+Week|Task|Component|Deadline|CourseID|Completed|Grade
+Week 1|Redo Java|Exam|2025-12-14||1|A+
+Week 2|Redo AIM|Exam|2025-12-19||0|
