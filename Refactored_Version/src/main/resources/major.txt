@@ -1,0 +1,7 @@
+MajorID	MajorName
+M101	Computer Science
+M102	Engineering
+M103	Mathematics
+M104	Literature
+M105	Philosophy
+M106	Biology

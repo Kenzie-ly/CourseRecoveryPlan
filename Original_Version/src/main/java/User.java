@@ -145,33 +145,33 @@ public class User {
             }
         }
 
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(userfile))) {
-            // Write header
-            writer.write("Username\tPassword\tFirstName\tLastname\tEmail\tRole\tLastLogin\tLastLogout");
-            writer.newLine();
-
-            // Write each user
-            for (User user : users) {
-                // Store timestamps as binary (milliseconds since epoch)
-                String lastLogin = user.lastLogin != null ? String.valueOf(user.lastLogin.getTime()) : "null";
-                String lastLogout = user.lastLogout != null ? String.valueOf(user.lastLogout.getTime()) : "null";
-
-                writer.write(String.format("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s",
-                        user.username,
-                        user.password,
-                        user.firstName,
-                        user.lastName,
-                        user.email,
-                        user.role,
-                        lastLogin,
-                        lastLogout
-                ));
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(userfile))) {
+                // Write header
+                writer.write("Username\tPassword\tFirstName\tLastname\tEmail\tRole\tLastLogin\tLastLogout");
                 writer.newLine();
+
+                // Write each user
+                for (User user : users) {
+                    // Store timestamps as binary (milliseconds since epoch)
+                    String lastLogin = user.lastLogin != null ? String.valueOf(user.lastLogin.getTime()) : "null";
+                    String lastLogout = user.lastLogout != null ? String.valueOf(user.lastLogout.getTime()) : "null";
+
+                    writer.write(String.format("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s",
+                            user.username,
+                            user.password,
+                            user.firstName,
+                            user.lastName,
+                            user.email,
+                            user.role,
+                            lastLogin,
+                            lastLogout
+                    ));
+                    writer.newLine();
+                }
+            } catch (IOException e) {
+                System.err.println("Error updating user file: " + e.getMessage());
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            System.err.println("Error updating user file: " + e.getMessage());
-            e.printStackTrace();
-        }
     }
 
     public void resetPass(String username, String email, String newPass) {
