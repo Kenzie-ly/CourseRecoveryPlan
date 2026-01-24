@@ -1,3 +1,4 @@
+package repository;
 import java.net.URL;
 
 public class ResourceManager {
@@ -12,6 +13,10 @@ public class ResourceManager {
 
     public static String getRecoveryPlanPath(){
         return "src/main/data/recovery_plans/";
+    }
+
+    public static String getRecoveryTaskPath(){
+        return "src/main/data/recovery_tasks/";
     }
 
     public static String getCourseDataPath() {

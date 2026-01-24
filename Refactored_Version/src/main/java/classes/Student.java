@@ -1,7 +1,4 @@
-import java.io.*;
-import java.lang.reflect.Array;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
+package classes;
 
 public class Student {
     private String studentID;

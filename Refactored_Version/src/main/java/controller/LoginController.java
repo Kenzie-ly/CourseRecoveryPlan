@@ -1,7 +1,11 @@
+package controller;
 import java.util.Date;
 
-public class LoginController {
+import classes.*;
+import repository.UserRepository;
 
+public class LoginController {
+    
     private User user = null;
 
     public User getLoggedInUser() {

@@ -1,11 +1,4 @@
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
+package classes;
 
 public class Course {
     private String courseID;
@@ -14,14 +7,16 @@ public class Course {
     private String semester;
     private String instructor;
     private int capacity;
+    private String majorID;
 
-    public Course(String courseID, String courseName, int credits, String semester, String instructor, int capacity) {
+    public Course(String courseID, String courseName, int credits, String semester, String instructor, int capacity, String majorID) {
         this.courseID = courseID;
         this.courseName = courseName;
         this.credits = credits;
         this.semester = semester;
         this.instructor = instructor;
         this.capacity = capacity;
+        this.majorID = majorID;
     }
 
     // getter
@@ -47,6 +42,10 @@ public class Course {
 
     public int getCapacity() {
         return capacity;
+    }
+
+    public String getMajorID(){
+        return majorID;
     }
 
     // setter

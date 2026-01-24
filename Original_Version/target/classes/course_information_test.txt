@@ -1,4 +1,4 @@
-CourseID	CourseName	Credits	Semester	Instructor	Capacity
+CourseID	CourseName	Credits	Semester	Instructor	Capacity    
 C101	Algorithms	4	Semester 1	Dr. Brown	143
 C102	Artificial Intelligence	2	Semester 1	Dr. Lee	92
 C103	Biology	2	Semester 1	Dr. Johnson	100
