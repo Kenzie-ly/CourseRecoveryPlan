@@ -19,6 +19,11 @@ public class ResourceManager {
         return "src/main/data/recovery_tasks/";
     }
 
+    public static String getMajorDataPath() {
+        URL resource = ResourceManager.class.getClassLoader().getResource ("major.txt");
+        return resource.getPath();
+    }
+
     public static String getCourseDataPath() {
         URL resource = ResourceManager.class.getClassLoader().getResource ("course_information_test.txt");
         return resource.getPath();

@@ -1,15 +1,17 @@
 package classes;
 
+import java.util.Objects;
+
 public class Student {
     private String studentID;
     private String firstName;
     private String lastName;
-    private String major;
+    private Major major;
     private String year;
     private String email;
     // private Map<String, String> Grades;
 
-    public Student(String studentID, String firstName, String lastName, String major, String year, String email){
+    public Student(String studentID, String firstName, String lastName, Major major, String year, String email){
         this.studentID = studentID;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -22,7 +24,7 @@ public class Student {
     public String getStudentID() {return studentID;}
     public String getFirstName() {return firstName;}
     public String getLastName() {return lastName;}
-    public String getMajor() {return major;}
+    public Major getMajor() {return major;}
     public String getYear() {return year;}
     public String getEmail() {return email;}
 
@@ -30,7 +32,7 @@ public class Student {
     public void setStudentID(String studentID) {this.studentID = studentID;}
     public void setFirstName(String firstName) {this.firstName = firstName;}
     public void setLastName(String lastName) {this.lastName = lastName;}
-    public void setMajor(String major) {this.major = major;}
+    public void setMajor(Major major) {this.major = major;}
     public void setYear(String year) {this.year = year;}
     public void setEmail(String email) {this.email = email;}
 
@@ -42,4 +44,18 @@ public class Student {
         System.out.println("Email: " + email);
         System.out.println("---------------------------------");
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Student student = (Student) o;
+        return Objects.equals(studentID, student.studentID); // Uniqueness based on ID
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(studentID);
+    }
+
 }

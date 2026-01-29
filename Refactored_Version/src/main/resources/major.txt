@@ -5,3 +5,7 @@ M103	Mathematics
 M104	Literature
 M105	Philosophy
 M106	Biology
+M107    Statistics
+M108    Economics
+M109    Physics
+M110    History

@@ -6,7 +6,7 @@ public class RecoveryPlan {
     private RecoveryTask task;
     private String status;
     
-    public RecoveryPlan(String planID, Enrollement enrollement, RecoveryTask task,String status){
+    public RecoveryPlan(String planID, RecoveryTask task, Enrollement enrollement,String status){
         this.planID = planID;
         this.enrollement = enrollement;
         this.task = task;
@@ -23,6 +23,10 @@ public class RecoveryPlan {
 
     public String getTaskID(){
         return task.getTaskID();
+    }
+
+    public Enrollement getEnrollement(){
+        return enrollement;
     }
 
     public String getEnrollmentID(){

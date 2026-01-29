@@ -28,21 +28,4 @@ public class Enrollement {
     public String getGrade(){
         return studentGrades;
     }
-    
-
-    // public List<Student> getFailedStudents(){
-    //     List<Student> faildStudents = new ArrayList<>();
-    //     for (Map.Entry<Student, String> entry : studentGrades.entrySet()) {
-    //         Student currentStudent = entry.getKey();
-    //         String grade = entry.getValue();
-
-    //         // You need logic here to decide what string counts as passing
-    //         if (grade.matches("[DEF][+-]?")) {
-    //             faildStudents.add(currentStudent);
-    //         }
-    //     }
-
-    //     return faildStudents;
-    // }
-    
 }

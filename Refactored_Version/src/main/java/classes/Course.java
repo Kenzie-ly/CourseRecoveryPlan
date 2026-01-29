@@ -69,14 +69,16 @@ public class Course {
         this.capacity = capacity;
     }
 
-    public void printInfo() {
-        System.out.println("CourseID: " + courseID);
-        System.out.println("Name: " + courseName);
-        System.out.println("Credits: " + credits);
-        System.out.println("Semester: " + semester);
-        System.out.println("Instructor: " + instructor);
-        System.out.println("Capacity: " + capacity);
-        System.out.println("---------------------------------");
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Course course = (Course) obj;
+        return courseID != null && courseID.equals(course.courseID);
     }
 
+    @Override
+    public int hashCode() {
+        return courseID != null ? courseID.hashCode() : 0;
+    }
 }

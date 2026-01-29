@@ -1,16 +1,87 @@
 package repository;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import classes.*;
+import model.Status;
 
 public class EnrollmentRepository {
+
+    public static List<Student> getEnrolledStudents() throws Exception {
+        // 1. Use a Set to store unique students
+        Set<Student> uniqueStudents = new HashSet<>();
+        
+        try (BufferedReader reader = new BufferedReader(new FileReader(ResourceManager.getGradeDataPath()))){
+            reader.readLine(); 
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] values = line.split("\t");
+                if(values.length != 4){
+                    String studentID = values[1];
+                    System.out.println(studentID);
+                    System.out.println(values.length);
+                }
+                Student student = StudentRepository.findStudentByStudentID(values[1]);
+                // String studentID = values[1];
+                // // System.out.println(values[1]); 
+                
+                // Student student = StudentRepository.findStudentByStudentID(studentID);
+                // if (student != null) {
+                //     System.out.println(student);
+                //     uniqueStudents.add(student); // Duplicate students will be ignored automatically
+                // }
+            }
+        }catch(Exception e){
+            System.out.println(e + "hello");
+        }
+        
+        // 3. Convert back to List at the end for the Controller
+        return null;
+    }
+
+    public static List<Enrollement> getStudentEnrollments(Student student){
+        List<Enrollement> enrollements = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(ResourceManager.getGradeDataPath()))) {
+            reader.readLine(); // skip header
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] value = line.split("\t");
+
+                if(student.getStudentID().equals(value[1])){
+                    enrollements.add(new Enrollement(value[0], student, CourseRepository.findCoursesByID(value[2]), value[3]));
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return enrollements;
+    }
+
+    public static List<Enrollement> getEnrollementsBasedOnPerformance(Status status){
+        List<Enrollement> enrollements = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(ResourceManager.getGradeDataPath()))) {
+            reader.readLine(); // skip header
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] value = line.split("\t");
+                if(status.equals(status.FAILED) && value[3].matches("[DEF][+-]?")){
+                    //pass students
+                    enrollements.add(new Enrollement(value[0], StudentRepository.findStudentByStudentID(value[1]), CourseRepository.findCoursesByID(value[2]), value[3]));
+                }else{
+                    //failed students
+                    enrollements.add(new Enrollement(value[0], StudentRepository.findStudentByStudentID(value[1]), CourseRepository.findCoursesByID(value[2]), value[3]));
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return enrollements;
+    }
 
     public static List<Enrollement> findGradeBasedOnCourse(Course course){
         List<Enrollement> enrollements = new ArrayList<>();
@@ -30,92 +101,26 @@ public class EnrollmentRepository {
         return enrollements;
     }
 
-    public static void updateRecoveryTask(RecoveryTask modifiedTask) throws IOException {
-        File originalFile = new File(ResourceManager.getRecoveryTaskPath());
-        File tempFile = new File("temp.txt");
-
-        // 1. USE TRY-WITH-RESOURCES to auto-close streams
-        try (BufferedReader reader = new BufferedReader(new FileReader(originalFile));
-            BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile))) { // removed 'true' (append)
-
+    public static Enrollement findEnrollementByID(String id){
+        try (BufferedReader reader = new BufferedReader(new FileReader(ResourceManager.getGradeDataPath()))) {
+            reader.readLine();//for skipping the header
             String line;
-            while ((line = reader.readLine()) != null) {
-                String[] data = line.split("\t");
-
-                // CHECK: Is this the user we are updating?
-                if (data[0].equals(modifiedTask.getTaskID())) {
-                    // YES: Write the NEW data
-                    writer.write(formatRecoveryTask(modifiedTask));
-                } else {
-                    // NO: Copy existing line
-                    writer.write(line);
+            while ((line = reader.readLine()) != null){
+                String[] enrollmentData = line.split("\t");
+                if (enrollmentData[0].equals(id)){
+                    Enrollement enrollement = new Enrollement(
+                        enrollmentData[0], 
+                        StudentRepository.findStudentByStudentID(enrollmentData[1]), 
+                        CourseRepository.findCoursesByID(enrollmentData[2]), 
+                        enrollmentData[3]
+                    );
+                    return enrollement;
                 }
-                writer.newLine();
+                
             }
-            
-        } // <--- Streams close AUTOMATICALLY here. The file lock is released.
-
-        // 2. NOW it is safe to swap the files
-        
-        // Safety Check: Delete failed?
-        if (!originalFile.delete()) {
-            System.out.println("Could not delete original file. Check permissions or if file is open.");
-            return; 
+        } catch (Exception e) {
+            System.out.println(e);
         }
-
-        // Safety Check: Rename failed?
-        if (!tempFile.renameTo(originalFile)) {
-            System.out.println("Could not rename temp file. You might be on a different drive partition.");
-        }
-    }
-
-    public static void addRecoveryTask(RecoveryTask newRecoveryTask) throws IOException{
-        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(ResourceManager.getRecoveryTaskPath(),true))) {
-            bufferedWriter.write(formatRecoveryTask(newRecoveryTask));
-            bufferedWriter.newLine();
-        }
-    }
-
-    public static void addRecoveryPlan(List<RecoveryPlan> recoveryPlans)throws IOException{
-        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(ResourceManager.getRecoveryPlanPath(),true))) {
-            for (var plan: recoveryPlans){
-                bufferedWriter.write(formatRecoveryPlan(plan));
-                bufferedWriter.newLine();
-            }
-        }
-    }
-
-    public static List<RecoveryTask> loadAllRecoveryTask() {
-        List<RecoveryTask> recoveryTasks = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(ResourceManager.getRecoveryTaskPath()))) {
-            reader.readLine();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.trim().isEmpty()) continue;
-                String[] value = line.split("\t");
-
-                recoveryTasks.add(new RecoveryTask(value[0], value[1], value[2]));
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return recoveryTasks;
-    }
-
-    private static String formatRecoveryTask(RecoveryTask recoveryTask){
-        return(
-            recoveryTask.getTaskID()  + "\t" +
-            recoveryTask.getPhase() + "\t" +
-            recoveryTask.getTask()
-        );
-    }
-
-    private static String formatRecoveryPlan(RecoveryPlan recoveryPlan){
-        return(
-            recoveryPlan.getPlanID()  + "\t" +
-            recoveryPlan.getTaskID() + "\t" +
-            recoveryPlan.getEnrollmentID()  + "\t" +
-            recoveryPlan.getStatus()
-        );
+        return null;
     }
 }
