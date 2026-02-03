@@ -36,5 +36,13 @@ public class ResourceManager {
     public static String getDefultLogoDataPath(){
         URL resource = ResourceManager.class.getClassLoader().getResource("defaultLogo.png");
         return resource.getPath();
-    }   
+    }
+    public static String getRequirement(){
+        URL resource = ResourceManager.class.getClassLoader().getResource("requirement.txt");
+        return resource.getPath();
+    }
+    public static String getRequirementMapping(){
+        URL resource = ResourceManager.class.getClassLoader().getResource("requirement_mapping.txt");
+        return resource.getPath();
+    }
 }

@@ -2,23 +2,19 @@ package classes;
 
 public class RecoveryPlan {
     private Enrollement enrollement;
-    private String planID;
     private RecoveryTask task;
-    private String status;
     
-    public RecoveryPlan(String planID, RecoveryTask task, Enrollement enrollement,String status){
-        this.planID = planID;
+    public RecoveryPlan(RecoveryTask task, Enrollement enrollement){
         this.enrollement = enrollement;
         this.task = task;
-        this.status = status;
     }
 
     public Course getRetakeCourse(){
         return enrollement.getCourse();
     }
 
-    public String getPlanID(){
-        return planID;
+    public RecoveryTask getTask(){
+        return task;
     }
 
     public String getTaskID(){
@@ -37,7 +33,4 @@ public class RecoveryPlan {
         return this.task.getTaskID();
     }
 
-    public String getStatus(){
-        return status;
-    }
 }

@@ -8,15 +8,17 @@ public class Student {
     private String lastName;
     private Major major;
     private String year;
+    private String sem;
     private String email;
     // private Map<String, String> Grades;
 
-    public Student(String studentID, String firstName, String lastName, Major major, String year, String email){
+    public Student(String studentID, String firstName, String lastName, Major major, String year, String sem,String email){
         this.studentID = studentID;
         this.firstName = firstName;
         this.lastName = lastName;
         this.major = major;
         this.year = year;
+        this.sem = sem;
         this.email = email;
     }
 
@@ -26,6 +28,7 @@ public class Student {
     public String getLastName() {return lastName;}
     public Major getMajor() {return major;}
     public String getYear() {return year;}
+    public String getSem() {return sem;}
     public String getEmail() {return email;}
 
     // setter
@@ -34,6 +37,7 @@ public class Student {
     public void setLastName(String lastName) {this.lastName = lastName;}
     public void setMajor(Major major) {this.major = major;}
     public void setYear(String year) {this.year = year;}
+    public void setSem(String sem) {this.sem = sem;}
     public void setEmail(String email) {this.email = email;}
 
     public void printInfo() {

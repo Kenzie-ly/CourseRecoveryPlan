@@ -1,8 +1,13 @@
 package classes;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ItemEvent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import javax.swing.*;
 
@@ -11,7 +16,7 @@ import controller.*;
 public class SelectingPlanPage extends JFrame {
     private ModuleController moduleController;
     private JPanel topPanel;
-    private JButton targetButton;
+    private JButton targetComponent;
     private JPanel studentPanel;
     private Course course;
     private JPanel mainPanel = new JPanel(new BorderLayout());
@@ -26,10 +31,10 @@ public class SelectingPlanPage extends JFrame {
         editTaskUI();
     }
 
-    public SelectingPlanPage(ModuleController moduleController, JPanel topPanel, JButton targetButton){
+    public SelectingPlanPage(ModuleController moduleController, JPanel topPanel, JButton targetComponent){
         this.moduleController = moduleController;
         this.topPanel = topPanel;
-        this.targetButton = targetButton; // Correct assignment
+        this.targetComponent = targetComponent; // Correct assignment
         this.setTitle("Select A Course");
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setSize(700, 400);
@@ -37,16 +42,16 @@ public class SelectingPlanPage extends JFrame {
         selectTaskUI();
     }
 
-    public SelectingPlanPage(ModuleController moduleController, JPanel topPanel, JButton targetButton, JPanel studentPanel){
+    public SelectingPlanPage(ModuleController moduleController, JPanel topPanel, JButton targetComponent, JPanel studentPanel){
         this.moduleController = moduleController;
         this.topPanel = topPanel;
-        this.targetButton = targetButton;
+        this.targetComponent = targetComponent;
         this.studentPanel = studentPanel;
         this.setTitle("Select A Course");
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setSize(800, 500);
         this.setLocationRelativeTo(null);
-        createRecoveryPlanUI();
+        selectCourseUI();
     }
 
     private void editTaskUI(){
@@ -56,16 +61,40 @@ public class SelectingPlanPage extends JFrame {
         List<RecoveryTask> recoveryTasks = moduleController.getAllRecoveryTask();
         List<RecoveryPlan> existingRecoveryPlans = moduleController.getRecoveryPlansByCourse(course);
 
+        List<RecoveryTask> editedTasks = new ArrayList<>();
+
         for(var task: recoveryTasks){
+            List<RecoveryPlan> newRecoveryPlans = new ArrayList<>();
             JPanel rowPanel = new JPanel();
             rowPanel.setLayout(new BoxLayout(rowPanel, BoxLayout.X_AXIS));
 
-            JLabel taskLabel = new JLabel(task.getTaskID()+ " - " +task.getTask());
+            JLabel taskLabel = new JLabel(task.getTaskID()+ " - " +task.getTask() +"("+ task.getPhase() + ")");
             JCheckBox checkBox = new JCheckBox();
 
-            if(existingRecoveryPlans.stream().anyMatch(p -> p.getTaskID().equals(task.getTaskID()))){
+            Optional<RecoveryPlan> matchingPlan = existingRecoveryPlans.stream()
+                .filter(p -> p.getTaskID().equals(task.getTaskID()))
+                .findFirst();
+            
+            if(matchingPlan.isPresent()){
                 checkBox.setSelected(true);
+                editedTasks.add(task);
             }
+
+            checkBox.addItemListener(e -> {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    if(matchingPlan.isPresent()){
+                        editedTasks.add(task);
+                    }else{
+                        editedTasks.add(task);
+                    }
+                } else {
+                    if(matchingPlan.isPresent()){
+                        editedTasks.remove(task);
+                    }else{
+                        editedTasks.remove(task);
+                    }
+                }
+            });
 
             rowPanel.add(taskLabel);
             rowPanel.add(Box.createHorizontalGlue());
@@ -83,15 +112,19 @@ public class SelectingPlanPage extends JFrame {
 
         JButton saveButton = new JButton("Save");
         saveButton.addActionListener(e -> {
-            
+            if(checkTask(editedTasks)){
+                moduleController.updateRecoveryPlan(editedTasks, course);
+                JOptionPane.showMessageDialog(this, "Successfully updated!");
+                this.dispose();
+            }
         });
 
         mainPanel.add(saveButton);
         this.add(mainPanel);
     }
 
-    private void createRecoveryPlanUI(){
-        List<Course> allCourses = moduleController.getAllCourses();
+    private void selectCourseUI(){
+        List<Course> allCourses = moduleController.getAllCoursesTakenByFailedStudents();
         JPanel createRecoveryPlanPanel = new JPanel(new GridLayout(0, 4, 10, 10));
     
         for (var course : allCourses){
@@ -114,18 +147,17 @@ public class SelectingPlanPage extends JFrame {
         int index = -1;
         Component[] components = topPanel.getComponents();
         for (int i = 0; i < components.length; i++) {
-            if (components[i] == targetButton) { // Fixed reference to targetButton
+            if (components[i] == targetComponent) { // Fixed reference to targetComponent
                 index = i;
                 break;
             }
         }
 
         if (index != -1) {
-            topPanel.remove(targetButton); // Fixed reference to targetButton
-
+            topPanel.remove(targetComponent); // Fixed reference to targetComponent
+            List<Enrollement> enrollments = moduleController.getFailedEnrollmentBasedOnCourse(course);
             JLabel targetLabel = new JLabel(course.getCourseID());
             topPanel.add(targetLabel, index); // Add it back at the same spot
-            List<Enrollement> enrollments = moduleController.getFailedEnrollmentBasedOnCourse(course);
 
             for (var enrollment : enrollments) {
                 // 2. Create the labels with white texts
@@ -157,35 +189,42 @@ public class SelectingPlanPage extends JFrame {
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS)); // Use vertical layout for tasks
         mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        List<String> taskList = showListOfTasks();
+        List<RecoveryTask> taskList = showListOfTasks();
 
         JButton saveButton = new JButton("Save");
         saveButton.addActionListener(e -> {
-            // Save the selected tasks and close the window
             saveSelectedTask(e, taskList);
-            this.dispose();
         });
 
         mainPanel.add(saveButton);
         this.add(mainPanel);
     }
 
-    private void saveSelectedTask(ActionEvent e, List<String> taskList){
+    private void saveSelectedTask(ActionEvent e, List<RecoveryTask> taskList){
+        //check task
+        if(!(checkTask(taskList))){
+            return;
+        }
+
+
         int index = -1;
         Component[] components = topPanel.getComponents();
         
         for (int i = 0; i < components.length; i++) {
-            if (components[i] == this.targetButton) { 
+            if (components[i] == this.targetComponent) { 
                 index = i;
                 break;
             }
         }
 
         if(index != -1){
-            String task = String.join(", ", taskList);
+            String task = taskList.stream()
+                .map(t -> t.getTaskID())
+                .collect(Collectors.joining(", "));
+
             JLabel taskLabel = new JLabel(task); 
 
-            topPanel.remove(targetButton);
+            topPanel.remove(targetComponent);
             topPanel.add(taskLabel, index);
 
             topPanel.revalidate();
@@ -194,10 +233,26 @@ public class SelectingPlanPage extends JFrame {
         }
     }
 
+    private boolean checkTask(List<RecoveryTask> taskList){
+        Set<String> phases = taskList.stream()
+            .map(RecoveryTask::getPhase)
+            .collect(Collectors.toSet());
+        if(taskList.isEmpty()){
+            this.dispose();
+            return false;
+        }else if (!(phases.equals(Set.of("Phase1", "Phase2", "Phase3")))){
+            JOptionPane.showMessageDialog(this, "Please choose one task for each phase!");
+            return false;
+        }else if(taskList.size() > 3 && phases.equals(Set.of("Phase1", "Phase2", "Phase3"))){
+            JOptionPane.showMessageDialog(this, "Please choose ONLY one task for each phase!");
+            return false;
+        }
+        return true;
+    }
 
-    private List<String> showListOfTasks(){
+    private List<RecoveryTask> showListOfTasks(){
         List<RecoveryTask> recoveryTasks = moduleController.getAllRecoveryTask();
-        List<String> taskList = new ArrayList<>();
+        List<RecoveryTask> selectedTask = new ArrayList<>();
 
         for (var task : recoveryTasks) {
             JPanel taskRow = new JPanel();
@@ -210,13 +265,19 @@ public class SelectingPlanPage extends JFrame {
             ));
 
             // 4. Task Label (Left Aligned)
-            JLabel taskLabel = new JLabel(task.getTaskID() + " - " + task.getTask());
+            JLabel taskLabel = new JLabel(task.getTaskID() + " - " + task.getTask() + "(" + task.getPhase() + ")");
             taskRow.add(taskLabel);
             taskRow.add(Box.createHorizontalGlue()); 
 
 
             JCheckBox selectButton = new JCheckBox();            
-            selectButton.addActionListener(e -> taskList.add(task.getTaskID()));
+            selectButton.addItemListener(e -> {
+                if(e.getStateChange() == ItemEvent.SELECTED){
+                    selectedTask.add(task);
+                }else{
+                    selectedTask.remove(task);
+                }
+            });
 
             taskRow.add(selectButton);
             
@@ -224,6 +285,6 @@ public class SelectingPlanPage extends JFrame {
             mainPanel.add(taskRow);
             mainPanel.add(Box.createVerticalStrut(10)); 
         }
-        return taskList;
+        return selectedTask;
     }
 }

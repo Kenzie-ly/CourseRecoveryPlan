@@ -20,7 +20,7 @@ public class StudentEligibilityPage extends JFrame {
         this.session = session;
         this.moduleController = new ModuleController();
         this.initFrame();
-        // this.loadPassedStudentData();
+        this.loadPassedStudentData();
         this.loadFailedStudentData();
     }
 
@@ -121,42 +121,36 @@ public class StudentEligibilityPage extends JFrame {
         for (Student s : moduleController.getAllEnrolledStudents()) {
             String id = s.getStudentID();
             String name = s.getFirstName() + " " + s.getLastName();
-            // Major major = s.getMajor();
-            System.out.println(s);
-            System.out.println(s.getMajor());
-            // double CGPA = moduleController.calcStudentCGPA(s);
+            Major major = s.getMajor();
+            double CGPA = moduleController.calcStudentCGPA(s);
 
-            // double roundedCGPA = Math.round(CGPA * 100.0) / 100.0;
+            double roundedCGPA = Math.round(CGPA * 100.0) / 100.0;
 
-            // if (roundedCGPA >= 2.0 && moduleController.canProgressToNextLevel(s)) {
-            //     passModel.addRow(new Object[]{id, name, major, roundedCGPA});
-            // }
+            // System.out.println(CGPA);
+
+            if (roundedCGPA >= 2.0 && moduleController.canProgressToNextLevel(s)) {
+                passModel.addRow(new Object[]{id, name, major.getMajorName(), roundedCGPA});
+            }
         }
     }
 
     private void loadFailedStudentData() {
         // Clear existing rows
-        // failedModel.setRowCount(0);
-        try {
-            moduleController.getAllEnrolledStudents();
-        } catch (Exception e) {
-            System.out.println(e + "helloooo");
-        }
-        
-        // System.out.println(moduleController.getAllEnrolledStudents());
+        failedModel.setRowCount(0);
+
         // Add new rows
-        // for (Student s : moduleController.getAllEnrolledStudents()) {
-        //     // String id = s.getStudentID();
-        //     // String name = s.getFirstName() + " " + s.getLastName();
-        //     // Major major = s.getMajor();
-        //     // double CGPA = moduleController.calcStudentCGPA(s);
+        for (Student s : moduleController.getAllEnrolledStudents()) {
+            String id = s.getStudentID();
+            String name = s.getFirstName() + " " + s.getLastName();
+            Major major = s.getMajor();
+            double CGPA = moduleController.calcStudentCGPA(s);
 
-        //     // double roundedCGPA = Math.round(CGPA * 100.0) / 100.0;
+            double roundedCGPA = Math.round(CGPA * 100.0) / 100.0;
 
-        //     // if (roundedCGPA < 2.0 || !moduleController.canProgressToNextLevel(s)) {
-        //     //     failedModel.addRow(new Object[]{id, name, major, roundedCGPA});
-        //     // }
-        // }
+            if (roundedCGPA < 2.0 || !moduleController.canProgressToNextLevel(s)) {
+                failedModel.addRow(new Object[]{id, name, major.getMajorName(), roundedCGPA});
+            }
+        }
     }
 
     private void refreshTable() {

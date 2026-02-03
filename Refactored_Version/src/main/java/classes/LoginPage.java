@@ -5,11 +5,9 @@ import controller.LoginController;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.util.List;
 import java.util.Random;
 
 public class LoginPage extends JFrame {
-    private List<User> users;
     private LoginController session;
 
     public LoginPage(){

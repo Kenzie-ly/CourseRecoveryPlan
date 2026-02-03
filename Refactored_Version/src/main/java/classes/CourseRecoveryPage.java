@@ -13,9 +13,10 @@ public class CourseRecoveryPage extends JFrame {
     private LoginController session;
     private JPanel studentPanel;
     private ModuleController moduleController;
-    private boolean newRecoveryPlan = false;
+    private boolean detailedPage = false;
     private JPanel mainPanel;
     private JPanel inputPanel;
+    private JPanel bottomPanel;
 
     public CourseRecoveryPage(LoginController session) { // Load all students first
         this.session = session;
@@ -23,10 +24,10 @@ public class CourseRecoveryPage extends JFrame {
         this.initFrame();
     }
 
-    public CourseRecoveryPage(LoginController session, boolean newRecoveryPlan) { // Load all students first
+    public CourseRecoveryPage(LoginController session, boolean detailedPage) { // Load all students first
         this.session = session;
         this.moduleController = new ModuleController();
-        this.newRecoveryPlan = newRecoveryPlan;
+        this.detailedPage = detailedPage;
         this.initFrame();
     }
 
@@ -153,6 +154,21 @@ public class CourseRecoveryPage extends JFrame {
 
         studentPanel.revalidate();
         studentPanel.repaint();
+
+
+        //bottom panel
+        bottomPanel.removeAll();
+        JButton removeButton = new JButton("Remove plan");
+        removeButton.addActionListener(e -> {
+            if(moduleController.deleteRecoveryPlanUsingEnrollments(enrollments)){
+                JOptionPane.showMessageDialog(this, "Successfully deleted");
+                goBack();
+            }
+        });
+
+        bottomPanel.add(removeButton);
+        bottomPanel.revalidate();
+        bottomPanel.repaint();
     }
 
     private void showRecoveryPlans(){
@@ -164,7 +180,10 @@ public class CourseRecoveryPage extends JFrame {
             button.setPreferredSize(new Dimension(180, 100));
             wrapper.add(button);
             studentPanel.add(wrapper);
-            button.addActionListener(e -> showAction(e, course));
+            button.addActionListener(e -> {
+                showAction(e, course);
+                detailedPage= true;
+            });
         }
 
         JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -178,17 +197,17 @@ public class CourseRecoveryPage extends JFrame {
             this.dispose();
         });
 
-        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));// search bar
+        this.bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));// search bar
         JTextField searchField = new JTextField(20);
         JButton searchBtn = new JButton("Search");
         JButton clearBtn = new JButton("Clear");
 
-        searchPanel.add(new JLabel("Search Course: "));
-        searchPanel.add(searchField);
-        searchPanel.add(searchBtn);
-        searchPanel.add(clearBtn);
+        bottomPanel.add(new JLabel("Search Course: "));
+        bottomPanel.add(searchField);
+        bottomPanel.add(searchBtn);
+        bottomPanel.add(clearBtn);
 
-        mainPanel.add(searchPanel, BorderLayout.SOUTH);
+        mainPanel.add(bottomPanel, BorderLayout.SOUTH);
     }
 
     private void goBack() //Navigation
@@ -198,7 +217,7 @@ public class CourseRecoveryPage extends JFrame {
 
         if (role.equals("Admin"))
         {
-            if(newRecoveryPlan){
+            if(detailedPage){
                 new CourseRecoveryPage(session).setVisible(true);
                 this.dispose();
             }else{
@@ -234,7 +253,7 @@ public class CourseRecoveryPage extends JFrame {
         mainPanel.add(headerPanel, BorderLayout.NORTH);
 
         studentPanel = new JPanel(); // Student List
-        if(this.newRecoveryPlan){
+        if(this.detailedPage){
             headerLabel.setText("Create Recovery Plan");
             createRecoveryPlan();
         }else{

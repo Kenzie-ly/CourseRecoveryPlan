@@ -1,6 +1,4 @@
-Plan_ID	Task_ID EnrollmentID	Status
-P99	T01	E022	Active
-P99	T02	E022	Active
-P99	T03	E022	Active
-P99	T04	E022	Active
-P99	T04	E131	Active
+Task_ID	EnrollmentID
+T02	E071
+T03	E071
+T04	E071

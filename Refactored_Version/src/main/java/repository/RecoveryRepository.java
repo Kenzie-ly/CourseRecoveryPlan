@@ -8,13 +8,47 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
+import classes.Enrollement;
 import classes.RecoveryPlan;
 import classes.RecoveryTask;
 
 public class RecoveryRepository {
 
-     public static RecoveryTask findRecoveryTaskByID(String id){
+    public static void deleteRecoveryPlanByEnrollment(List<Enrollement> enrollements) throws Exception{
+        File originalFile = new File(ResourceManager.getRecoveryPlanPath());
+        File tempFile = new File("temp.txt");
+        List<String> enrollmentIDs = enrollements.stream().map(Enrollement::getEnrollmentID).toList();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(originalFile));
+            BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile))) {
+            //removing parts
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] data = line.split("\t");
+
+                if (!(enrollmentIDs.contains(data[1]))) {
+                    writer.write(line);
+                    writer.newLine();
+                }
+            }
+        } 
+
+        if (!originalFile.delete()) {
+            System.out.println("Could not delete original file. Check permissions or if file is open.");
+            return; 
+        }
+
+        // Safety Check: Rename failed?
+        if (!tempFile.renameTo(originalFile)) {
+            System.out.println("Could not rename temp file. You might be on a different drive partition.");
+        }
+    }
+
+    public static RecoveryTask findRecoveryTaskByID(String id){
         try (BufferedReader reader = new BufferedReader(new FileReader(ResourceManager.getRecoveryTaskPath()))) {
             reader.readLine();//for skipping the header
             String line;
@@ -35,6 +69,42 @@ public class RecoveryRepository {
         }
         return null;
     }
+
+    public static void updateRecoveryPlan(List<RecoveryPlan> modifiedPlans) throws IOException {
+        File originalFile = new File(ResourceManager.getRecoveryPlanPath());
+        File tempFile = new File("temp.txt");
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(originalFile));
+            BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile))) {
+            //removing parts
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] data = line.split("\t");
+                Optional<RecoveryPlan> deletedPlan = modifiedPlans.stream()
+                    .filter(p -> !(p.getTaskID().equals(data[0])) && p.getEnrollmentID().equals(data[1]))
+                    .findFirst();
+
+                if (!(deletedPlan.isPresent())) {
+                    writer.write(line);
+                    writer.newLine();
+                }
+            }
+        } 
+
+        if (!originalFile.delete()) {
+            System.out.println("Could not delete original file. Check permissions or if file is open.");
+            return; 
+        }
+
+        // Safety Check: Rename failed?
+        if (!tempFile.renameTo(originalFile)) {
+            System.out.println("Could not rename temp file. You might be on a different drive partition.");
+        }
+
+        //add the new plans
+        addRecoveryPlan(modifiedPlans);
+    }
+
 
     public static void updateRecoveryTask(RecoveryTask modifiedTask) throws IOException {
         File originalFile = new File(ResourceManager.getRecoveryTaskPath());
@@ -118,10 +188,8 @@ public class RecoveryRepository {
                 String[] value = line.split("\t");
 
                 recoveryPlans.add(new RecoveryPlan(
-                    value[0], 
-                    findRecoveryTaskByID(value[1]), 
-                    EnrollmentRepository.findEnrollementByID(value[2]), 
-                    value[3])
+                    findRecoveryTaskByID(value[0]), 
+                    EnrollmentRepository.findEnrollementByID(value[1]))
                 );
             }
         } catch (IOException e) {
@@ -140,10 +208,8 @@ public class RecoveryRepository {
 
     private static String formatRecoveryPlan(RecoveryPlan recoveryPlan){
         return(
-            recoveryPlan.getPlanID()  + "\t" +
             recoveryPlan.getTaskID() + "\t" +
-            recoveryPlan.getEnrollmentID()  + "\t" +
-            recoveryPlan.getStatus()
+            recoveryPlan.getEnrollmentID()
         );
     }
 }

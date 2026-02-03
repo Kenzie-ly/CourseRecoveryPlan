@@ -10,16 +10,11 @@ import classes.*;
 import repository.*;
 
 public class ModuleController {
-    private final List<Course> courses = CourseRepository.loadAllCourses();
-    private List<RecoveryPlan> allRecoveryPlans = new ArrayList<>();
+    private final List<Course> allCourses = CourseRepository.loadAllCourses();
     private static Map<String, Double> points = new HashMap<>();
 
     public ModuleController(){
         initGradePoints();
-    }
-    
-    public List<Course> getAllCourses(){
-        return courses;
     }
 
     private static Map<String, Double> initGradePoints() {
@@ -30,43 +25,41 @@ public class ModuleController {
         points.put("B-", 2.7);
         points.put("C+", 2.3);
         points.put("C", 2.0);
+        points.put("C-", 2.0);
         points.put("D", 1.0);
+        points.put("D-", 1.0);
         points.put("F", 0.0);
         return points;
     }
 
     public List<Student> getAllEnrolledStudents(){
-        try {
-            return EnrollmentRepository.getEnrolledStudents();
-        } catch (Exception e) {
-            System.out.println(e + "hello");
-        }
-        return null;
+        return EnrollmentRepository.getEnrolledStudents();
+    }
+
+    public List<Course> getAllCoursesTakenByFailedStudents(){
+        List<Course> existedCourses = this.getCourseOfRecoveryPlans();
+        Set<String> existedCourseIds = existedCourses.stream()
+                .map(Course::getCourseID)
+                .collect(Collectors.toSet());
+
+        return EnrollmentRepository.getAllCoursesTakenByFailedStudents().stream()
+                .filter(c -> !existedCourseIds.contains(c.getCourseID()))
+                .toList();
     }
 
     public boolean canProgressToNextLevel(Student student) {
-        int failedCourseCount = 0;
         List<Enrollement> enrollements =  EnrollmentRepository.getStudentEnrollments(student);
-
-        for(var course:CourseRepository.findCoursesByMajor(student.getMajor())){
-            for(var enrollement: enrollements){
-                if(!(enrollement.getCourse().equals(course)) || enrollement.getGrade().matches("[DEF][+-]?")){
-                    failedCourseCount += 1;
-                }
+        int totalTakenCourses = enrollements.size();
+        int failedCourseCount = Math.abs(RequirementRepository.findRequirement(student.getMajor(),student.getYear(), student.getSem()).getRequiredCourseCount() - totalTakenCourses);
+        
+        for(var enrollement: enrollements){
+            if(enrollement.getGrade().matches("[DEF][+-]?")){
+                failedCourseCount += 1;
             }
         }
         // Can progress if 3 or fewer failed courses
         return failedCourseCount <= 3;
     }
-
-    // public List<Enrollement> getFailedEnrollements(){
-    //     return EnrollmentRepository.getEnrollementsBasedOnPerformance(Status.FAILED);
-    // }
-
-    // public List<Enrollement> getPassEnrollements(){
-    //     return EnrollmentRepository.getEnrollementsBasedOnPerformance(Status.PASS);
-    // }
-
 
     public double calcStudentCGPA(Student student){
         double grades = 0;
@@ -74,8 +67,7 @@ public class ModuleController {
             grades = grades + points.get(enrollement.getGrade());
         }
 
-        System.out.println(student.getMajor());
-        return grades/CourseRepository.findCoursesByMajor(student.getMajor()).size();
+        return grades/(RequirementRepository.findRequirement(student.getMajor(), student.getYear(), student.getSem())).getRequiredCourseCount();
     }
 
     public List<Enrollement> getPassedEnrollmentBasedOnCourse(Course course){
@@ -106,11 +98,9 @@ public class ModuleController {
 
         if (failedEnrollements != null && !failedEnrollements.isEmpty()){
             List<RecoveryPlan> recoveryPlans = new ArrayList<>();
-            int num = 99;
             
             for (var enrollement: failedEnrollements){
-                recoveryPlans.add(new RecoveryPlan(("P"+num), selectedRecoveryTask, enrollement, "Active"));
-                num++;
+                recoveryPlans.add(new RecoveryPlan(selectedRecoveryTask, enrollement));
             }
             try{
                 RecoveryRepository.addRecoveryPlan(recoveryPlans);
@@ -125,8 +115,7 @@ public class ModuleController {
     }
 
     public List<Course> getCourseOfRecoveryPlans() {
-        List<Course> allCourses = getAllCourses();
-        this.allRecoveryPlans = RecoveryRepository.loadAllRecoveryPlan();
+        List<RecoveryPlan> allRecoveryPlans = RecoveryRepository.loadAllRecoveryPlan();
 
         if (allRecoveryPlans == null || allRecoveryPlans.isEmpty()) {
             System.out.println("No recovery plans found.");
@@ -141,10 +130,8 @@ public class ModuleController {
                     }
                     return plan.getEnrollement().getCourse();
                 })
-                .filter(course -> course != null) // Filter out null courses
+                .filter(course -> course != null) 
                 .collect(Collectors.toSet());
-
-        System.out.println("Courses in Plans: " + coursesInPlans);
 
         if (coursesInPlans.isEmpty()) {
             System.out.println("No courses found in recovery plans.");
@@ -155,16 +142,41 @@ public class ModuleController {
                 .filter(coursesInPlans::contains)
                 .collect(Collectors.toList());
 
-        System.out.println("Filtered Courses: " + filteredCourses);
         return filteredCourses;
     }
 
     public List<RecoveryPlan> getRecoveryPlansByCourse(Course course){
-        return allRecoveryPlans.stream()
+        return RecoveryRepository.loadAllRecoveryPlan().stream()
                 .filter(plan -> plan.getEnrollement().getCourse().equals(course))
                 .collect(Collectors.toList());
     }
 
+    public boolean updateRecoveryPlan(List<RecoveryTask> recoveryTasks, Course course){
+        try {
+            List<RecoveryPlan> recoveryPlans = new ArrayList<>();
+            List<Enrollement> enrollements = this.getFailedEnrollmentBasedOnCourse(course);
+            for(var task: recoveryTasks){
+                for(var enrollement: enrollements){
+                    recoveryPlans.add(new RecoveryPlan(task, enrollement));
+                }
+            }
+            RecoveryRepository.updateRecoveryPlan(recoveryPlans);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;   
+    }
+
+    public boolean deleteRecoveryPlanUsingEnrollments(List<Enrollement> enrollements){
+        try {
+            RecoveryRepository.deleteRecoveryPlanByEnrollment(enrollements);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;   
+    }
 
     public RecoveryTask createRecoveryTask(String taskID, String phase, String description){
         RecoveryTask recoveryTask = new RecoveryTask(taskID, phase, description);

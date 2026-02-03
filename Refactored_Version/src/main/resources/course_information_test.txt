@@ -25,19 +25,19 @@ C123	Operating Systems	2	Semester 1	Dr. Miller	74	M101
 C124	Mathematics	3	Semester 1	Prof. Davis	52	M103
 C125	Mathematics	2	Semester 1	Prof. Chen	51	M103
 C126	Cybersecurity	2	Semester 1	Prof. Chen	58	M101
-C127	History	4	Semester 1	Dr. Johnson	69	M104
+C127	History	4	Semester 1	Dr. Johnson	69	M110
+C130	History	4	Semester 1	Dr. Kumar	58	M110
 C128	Mathematics	2	Semester 1	Prof. Davis	67	M103
 C129	Software Engineering	4	Semester 1	Dr. Brown	52	M102
-C130	History	4	Semester 1	Dr. Kumar	58	M104
 C131	Cybersecurity	4	Semester 1	Dr. Johnson	67	M101
-C132	Physics	3	Semester 1	Prof. Smith	156	M102
-C133	Physics	3	Semester 1	Dr. Lee	86	M102
+C132	Physics	3	Semester 1	Prof. Smith	156	M109
+C133	Physics	3	Semester 1	Dr. Lee	86	M109
 C134	Data Structures	4	Semester 1	Dr. Johnson	142	M101
 C135	Biology	2	Semester 1	Dr. Miller	96	M106
 C136	Artificial Intelligence	4	Semester 1	Dr. Brown	119	M101
 C137	Algorithms	3	Semester 1	Dr. Lee	163	M101
 C138	Cybersecurity	3	Semester 2	Dr. Johnson	169	M101
-C139	Economics	3	Semester 1	Dr. Miller	183	M104
+C139	Economics	3	Semester 1	Dr. Miller	183	M108
 C140	Philosophy	4	Semester 1	Dr. Miller	152	M105
 C141	English Composition	4	Semester 1	Dr. Lee	176	M104
 C142	Networking	3	Semester 1	Prof. Smith	102	M102
@@ -54,48 +54,48 @@ C152	Computer Science	2	Semester 2	Prof. Chen	69	M101
 C153	Data Structures	3	Semester 1	Dr. Brown	56	M101
 C154	Networking	4	Semester 1	Dr. Miller	98	M102
 C155	Operating Systems	3	Semester 1	Dr. Lee	164	M101
-C156	Economics	3	Semester 1	Prof. Davis	109	M104
+C156	Economics	3	Semester 1	Prof. Davis	109	M108
 C157	Operating Systems	2	Semester 1	Prof. Davis	69	M101
 C158	Computer Science	3	Semester 1	Dr. Brown	125	M101
 C159	Literature	3	Semester 1	Prof. Smith	188	M104
 C160	English Composition	3	Semester 1	Dr. Johnson	88	M104
-C161	History	2	Semester 1	Prof. Chen	184	M104
+C161	History	2	Semester 1	Prof. Chen	184	M110
 C162	Philosophy	3	Semester 1	Prof. Chen	60	M105
-C163	Economics	2	Semester 1	Prof. Chen	183	M104
+C163	Economics	2	Semester 1	Prof. Chen	183	M108
 C164	English Composition	2	Semester 1	Prof. Davis	141	M104
 C165	Artificial Intelligence	4	Semester 1	Prof. Davis	151	M101
-C166	History	3	Semester 1	Dr. Kumar	55	M104
+C166	History	3	Semester 1	Dr. Kumar	55	M110
 C167	Software Engineering	3	Semester 1	Dr. Miller	162	M102
 C168	Networking	4	Semester 1	Dr. Johnson	193	M102
 C169	Computer Science	4	Semester 1	Dr. Lee	50	M101
-C170	Statistics	4	Semester 1	Prof. Davis	140	M103
+C170	Statistics	4	Semester 1	Prof. Davis	140	M107
 C171	Cybersecurity	4	Semester 1	Dr. Miller	159	M101
 C172	Chemistry	2	Semester 1	Dr. Johnson	189	M106
 C173	Computer Science	2	Semester 2	Prof. Smith	177	M101
 C174	Computer Science	3	Semester 1	Dr. Brown	92	M101
-C175	Physics	2	Semester 1	Dr. Kumar	194	M102
-C176	Economics	2	Semester 1	Dr. Lee	95	M104
-C177	Statistics	2	Semester 1	Dr. Miller	94	M103
+C175	Physics	2	Semester 1	Dr. Kumar	194	M109
+C176	Economics	2	Semester 1	Dr. Lee	95	M108
+C177	Statistics	2	Semester 1	Dr. Miller	94	M107
 C178	English Composition	2	Semester 1	Prof. Davis	177	M104
 C179	English Composition	3	Semester 1	Dr. Kumar	103	M104
 C180	Software Engineering	4	Semester 1	Prof. Chen	133	M102
-C181	Statistics	3	Semester 1	Dr. Miller	154	M103
-C182	Statistics	4	Semester 1	Dr. Johnson	55	M103
+C181	Statistics	3	Semester 1	Dr. Miller	154	M107
+C182	Statistics	4	Semester 1	Dr. Johnson	55	M107
 C183	English Composition	4	Semester 1	Dr. Brown	61	M104
 C184	Database Systems	3	Semester 2	Dr. Lee	53	M101
 C185	Data Structures	4	Semester 1	Dr. Johnson	88	M101
 C186	Machine Learning	4	Semester 2	Dr. Lee	176	M101
-C187	Statistics	3	Semester 1	Dr. Brown	121	M103
+C187	Statistics	3	Semester 1	Dr. Brown	121	M107
 C188	Literature	4	Semester 1	Dr. Kumar	154	M104
 C189	Data Structures	3	Semester 2	Dr. Lee	154	M101
-C190	Statistics	2	Semester 1	Dr. Lee	62	M103
+C190	Statistics	2	Semester 1	Dr. Lee	62	M107
 C191	Software Engineering	3	Semester 1	Dr. Johnson	168	M102
 C192	Cybersecurity	4	Semester 1	Dr. Brown	62	M101
 C193	Artificial Intelligence	4	Semester 1	Prof. Smith	122	M101
 C194	Data Structures	3	Semester 2	Dr. Miller	133	M101
 C195	Philosophy	4	Semester 1	Dr. Lee	69	M105
 C196	Computer Science	2	Semester 1	Dr. Johnson	115	M101
-C197	Statistics	4	Semester 1	Prof. Chen	114	M103
+C197	Statistics	4	Semester 1	Prof. Chen	114	M107
 C198	English Composition	3	Semester 1	Dr. Johnson	183	M104
 C199	Networking	3	Semester 1	Prof. Davis	92	M102
-C200	Physics	3	Semester 1	Dr. Miller	85	M102
+C200	Physics	3	Semester 1	Dr. Miller	85	M109
