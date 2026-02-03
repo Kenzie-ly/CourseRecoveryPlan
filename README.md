@@ -1,1 +1,1 @@
-# HotelManagementSystem
+# CourseRecoveryPlan System
