@@ -1,0 +1,273 @@
+-- 1. Majors Table
+CREATE TABLE majors (
+    MajorID VARCHAR(10) PRIMARY KEY,
+    MajorName VARCHAR(100)
+);
+
+INSERT INTO majors (MajorID, MajorName) VALUES
+('M101', 'Computer Science'),
+('M102', 'Engineering'),
+('M103', 'Mathematics'),
+('M104', 'Literature'),
+('M105', 'Philosophy'),
+('M106', 'Biology'),
+('M107', 'Statistics'),
+('M108', 'Economics'),
+('M109', 'Physics'),
+('M110', 'History');
+
+-- 2. Requirements Table
+CREATE TABLE requirements (
+    RequirementID VARCHAR(10) PRIMARY KEY,
+    Year VARCHAR(20),
+    Semester VARCHAR(20),
+    RequiredCourseCount INT,
+    RequiredCredits INT
+);
+
+INSERT INTO requirements (RequirementID, Year, Semester, RequiredCourseCount, RequiredCredits) VALUES
+('R01', 'Freshman', 'Semester 1', 5, 14),
+('R02', 'Freshman', 'Semester 2', 5, 14),
+('R03', 'Sophomore', 'Semester 1', 5, 14),
+('R04', 'Sophomore', 'Semester 2', 5, 14),
+('R05', 'Junior', 'Semester 1', 5, 14),
+('R06', 'Junior', 'Semester 2', 5, 14),
+('R07', 'Senior', 'Semester 1', 4, 12),
+('R08', 'Senior', 'Semester 2', 4, 12),
+('R09', 'Senior', 'Semester 1', 7, 21),
+('R10', 'Senior', 'Semester 2', 7, 21);
+
+-- 3. Major-Requirement Mapping
+CREATE TABLE requirement_mapping (
+    MajorID VARCHAR(10) REFERENCES majors(MajorID),
+    RequirementID VARCHAR(10) REFERENCES requirements(RequirementID)
+);
+
+INSERT INTO requirement_mapping (MajorID, RequirementID) VALUES
+('M101', 'R01'), ('M102', 'R01'), ('M103', 'R01'), ('M104', 'R01'), ('M105', 'R01'), ('M106', 'R01'), ('M107', 'R01'), ('M108', 'R01'),
+('M101', 'R02'), ('M102', 'R02'), ('M103', 'R02'), ('M104', 'R02'), ('M105', 'R02'), ('M106', 'R02'), ('M107', 'R02'), ('M108', 'R02'),
+('M101', 'R03'), ('M102', 'R03'), ('M103', 'R03'), ('M104', 'R03'), ('M105', 'R03'), ('M106', 'R03'), ('M107', 'R03'), ('M108', 'R03'),
+('M101', 'R04'), ('M102', 'R04'), ('M103', 'R04'), ('M104', 'R04'), ('M105', 'R04'), ('M106', 'R04'), ('M107', 'R04'), ('M108', 'R04'),
+('M101', 'R05'), ('M102', 'R05'), ('M103', 'R05'), ('M104', 'R05'), ('M105', 'R05'), ('M106', 'R05'), ('M107', 'R05'), ('M108', 'R05'),
+('M101', 'R06'), ('M102', 'R06'), ('M103', 'R06'), ('M104', 'R06'), ('M105', 'R06'), ('M106', 'R06'), ('M107', 'R06'), ('M108', 'R06'),
+('M101', 'R09'), ('M102', 'R07'), ('M103', 'R07'), ('M104', 'R07'), ('M105', 'R07'), ('M106', 'R07'), ('M107', 'R07'), ('M108', 'R07'),
+('M101', 'R10'), ('M102', 'R08'), ('M103', 'R08'), ('M104', 'R08'), ('M105', 'R08'), ('M106', 'R08'), ('M107', 'R08'), ('M108', 'R08');
+
+-- 4. User Accounts Table
+CREATE TABLE user_accounts (
+    Username VARCHAR(50) PRIMARY KEY,
+    Password VARCHAR(50),
+    FirstName VARCHAR(50),
+    LastName VARCHAR(50),
+    Email VARCHAR(100),
+    Role VARCHAR(30),
+    LastLogin BIGINT,
+    LastLogout BIGINT
+);
+
+INSERT INTO user_accounts (Username, Password, FirstName, LastName, Email, Role, LastLogin, LastLogout) VALUES
+('admin2', 'abc456', 'Ahmed', 'Yumnu', 'yumnu@university.edu.my', 'Admin', 1765294017094, 1765293816851),
+('officer1', 'defdef123', 'Thivedraan', 'Jambu', 'thivedraan@university.edu.my', 'AcademicOfficer', 1765713849909, 1765713210342),
+('officer2', 'defdef789', 'Jin', 'An', 'jintech674@gmail.com', 'AcademicOfficer', 1765726818516, 1765726854518),
+('admin1', 'hello123', 'Richardo', 'Osmond', 'admin1@university.edu.my', 'Admin', 1768911024099, 1768910987497);
+
+-- 5. Student Information Table
+CREATE TABLE students (
+    StudentID VARCHAR(10) PRIMARY KEY,
+    FirstName VARCHAR(50),
+    LastName VARCHAR(50),
+    Major VARCHAR(50),
+    Year VARCHAR(20),
+    Semester VARCHAR(20),
+    Email VARCHAR(100)
+);
+
+INSERT INTO students (StudentID, FirstName, LastName, Major, Year, Semester, Email) VALUES
+('S002', 'George', 'Wilson', 'Computer Science', 'Sophomore', 'Semester 1', 'george.wilso@university.edu'),
+('S003', 'Ivan', 'Wilson', 'Mathematics', 'Senior', 'Semester 2', 'ivan.wilson@university.edu'),
+('S004', 'Ivan', 'Chen', 'Philosophy', 'Senior', 'Semester 1', 'jintech674@gmail.com'),
+('S005', 'Bob', 'Smith', 'Statistics', 'Sophomore', 'Semester 2', 'bob.smith@university.edu'),
+('S008', 'Bob', 'Chen', 'Engineering', 'Freshman', 'Semester 1', 'bob.chen@university.edu'),
+('S010', 'Charlie', 'Miller', 'Computer Science', 'Freshman', 'Semester 2', 'charlie.miller@university.edu'),
+('S011', 'Charlie', 'Brown', 'Engineering', 'Junior', 'Semester 1', 'charlie.brown@university.edu'),
+('S012', 'Quinn', 'Chen', 'Engineering', 'Sophomore', 'Semester 2', 'quinn.chen@university.edu'),
+('S013', 'Ivan', 'Lee', 'Engineering', 'Junior', 'Semester 1', 'ivan.lee@university.edu'),
+('S015', 'Alice', 'Wilson', 'Engineering', 'Freshman', 'Semester 2', 'alice.wilson@university.edu'),
+('S018', 'Julia', 'Davis', 'Mathematics', 'Junior', 'Semester 1', 'julia.davis@university.edu'),
+('S020', 'Rachel', 'Miller', 'Biology', 'Junior', 'Semester 2', 'rachel.miller@university.edu'),
+('S027', 'Michael', 'Wilson', 'Mathematics', 'Sophomore', 'Semester 1', 'michael.wilson@university.edu'),
+('S030', 'Quinn', 'Wilson', 'Philosophy', 'Sophomore', 'Semester 2', 'quinn.wilson@university.edu'),
+('S034', 'Rachel', 'Taylor', 'Mathematics', 'Junior', 'Semester 1', 'rachel.taylor@university.edu'),
+('S037', 'Sam', 'Chen', 'Computer Science', 'Junior', 'Semester 1', 'sam.chen@university.edu'),
+('S040', 'Quinn', 'Smith', 'Biology', 'Sophomore', 'Semester 2', 'quinn.smith@university.edu'),
+('S043', 'Ivan', 'Chen', 'Economics', 'Junior', 'Semester 1', 'ivan.chen@university.edu'),
+('S046', 'Ethan', 'Lee', 'Statistics', 'Junior', 'Semester 1', 'ethan.lee@university.edu'),
+('S050', 'Ethan', 'Lee', 'Economics', 'Senior', 'Semester 2', 'ethan.lee@university.edu'),
+('S001', 'Fiona', 'Smith', 'Computer Science', 'Senior', 'Semester 1', 'fiona.smith@university.edu');
+-- 6. Course Information Table
+CREATE TABLE courses (
+    CourseID VARCHAR(10) PRIMARY KEY,
+    CourseName VARCHAR(100),
+    Credits INT,
+    Semester VARCHAR(20),
+    Instructor VARCHAR(100),
+    Capacity INT,
+    MajorID VARCHAR(10) REFERENCES majors(MajorID)
+);
+
+INSERT INTO courses (CourseID, CourseName, Credits, Semester, Instructor, Capacity, MajorID) VALUES
+('C101', 'Algorithms', 4, 'Semester 1', 'Dr. Brown', 143, 'M101'),
+('C102', 'Artificial Intelligence', 2, 'Semester 1', 'Dr. Lee', 92, 'M101'),
+('C103', 'Biology', 2, 'Semester 1', 'Dr. Johnson', 100, 'M106'),
+('C104', 'Chemistry', 3, 'Semester 1', 'Dr. Lee', 130, 'M106'),
+('C105', 'Operating Systems', 2, 'Semester 1', 'Dr. Brown', 144, 'M101'),
+('C106', 'Artificial Intelligence', 4, 'Semester 1', 'Prof. Davis', 191, 'M101'),
+('C107', 'English Composition', 4, 'Semester 1', 'Prof. Chen', 51, 'M104'),
+('C108', 'Literature', 3, 'Semester 1', 'Dr. Kumar', 197, 'M104'),
+('C109', 'Software Engineering', 2, 'Semester 1', 'Prof. Davis', 146, 'M102'),
+('C110', 'Literature', 3, 'Semester 1', 'Prof. Davis', 61, 'M104'),
+('C111', 'Database Systems', 2, 'Semester 1', 'Prof. Chen', 99, 'M101'),
+('C112', 'English Composition', 2, 'Semester 1', 'Prof. Chen', 148, 'M104'),
+('C113', 'Data Structures', 4, 'Semester 1', 'Dr. Kumar', 195, 'M101'),
+('C114', 'Software Engineering', 4, 'Semester 1', 'Dr. Miller', 121, 'M102'),
+('C115', 'Cybersecurity', 3, 'Semester 1', 'Dr. Lee', 95, 'M101'),
+('C116', 'Operating Systems', 3, 'Semester 1', 'Prof. Chen', 104, 'M101'),
+('C117', 'Cybersecurity', 2, 'Semester 1', 'Dr. Brown', 120, 'M101'),
+('C118', 'Software Engineering', 2, 'Semester 1', 'Dr. Miller', 76, 'M102'),
+('C119', 'Philosophy', 4, 'Semester 1', 'Dr. Kumar', 193, 'M105'),
+('C120', 'Machine Learning', 3, 'Semester 1', 'Prof. Chen', 176, 'M101'),
+('C121', 'Computer Science', 3, 'Semester 1', 'Prof. Davis', 132, 'M101'),
+('C122', 'Mathematics', 4, 'Semester 1', 'Prof. Smith', 170, 'M103'),
+('C123', 'Operating Systems', 2, 'Semester 1', 'Dr. Miller', 74, 'M101'),
+('C124', 'Mathematics', 3, 'Semester 1', 'Prof. Davis', 52, 'M103'),
+('C125', 'Mathematics', 2, 'Semester 1', 'Prof. Chen', 51, 'M103'),
+('C126', 'Cybersecurity', 2, 'Semester 1', 'Prof. Chen', 58, 'M101'),
+('C127', 'History', 4, 'Semester 1', 'Dr. Johnson', 69, 'M110'),
+('C130', 'History', 4, 'Semester 1', 'Dr. Kumar', 58, 'M110'),
+('C128', 'Mathematics', 2, 'Semester 1', 'Prof. Davis', 67, 'M103'),
+('C129', 'Software Engineering', 4, 'Semester 1', 'Dr. Brown', 52, 'M102'),
+('C131', 'Cybersecurity', 4, 'Semester 1', 'Dr. Johnson', 67, 'M101'),
+('C132', 'Physics', 3, 'Semester 1', 'Prof. Smith', 156, 'M109'),
+('C133', 'Physics', 3, 'Semester 1', 'Dr. Lee', 86, 'M109'),
+('C134', 'Data Structures', 4, 'Semester 1', 'Dr. Johnson', 142, 'M101'),
+('C135', 'Biology', 2, 'Semester 1', 'Dr. Miller', 96, 'M106'),
+('C136', 'Artificial Intelligence', 4, 'Semester 1', 'Dr. Brown', 119, 'M101'),
+('C137', 'Algorithms', 3, 'Semester 1', 'Dr. Lee', 163, 'M101'),
+('C138', 'Cybersecurity', 3, 'Semester 2', 'Dr. Johnson', 169, 'M101'),
+('C139', 'Economics', 3, 'Semester 1', 'Dr. Miller', 183, 'M108'),
+('C140', 'Philosophy', 4, 'Semester 1', 'Dr. Miller', 152, 'M105'),
+('C141', 'English Composition', 4, 'Semester 1', 'Dr. Lee', 176, 'M104'),
+('C142', 'Networking', 3, 'Semester 1', 'Prof. Smith', 102, 'M102'),
+('C143', 'Biology', 4, 'Semester 1', 'Dr. Miller', 72, 'M106'),
+('C144', 'Mathematics', 3, 'Semester 1', 'Dr. Kumar', 169, 'M103'),
+('C145', 'Cybersecurity', 4, 'Semester 1', 'Dr. Brown', 60, 'M101'),
+('C146', 'Cybersecurity', 2, 'Semester 1', 'Prof. Smith', 59, 'M101'),
+('C147', 'Philosophy', 4, 'Semester 1', 'Prof. Chen', 80, 'M105'),
+('C148', 'English Composition', 2, 'Semester 1', 'Dr. Brown', 114, 'M104'),
+('C149', 'English Composition', 2, 'Semester 1', 'Dr. Miller', 66, 'M104'),
+('C150', 'Literature', 4, 'Semester 1', 'Dr. Kumar', 60, 'M104'),
+('C151', 'Philosophy', 2, 'Semester 1', 'Dr. Miller', 53, 'M105'),
+('C152', 'Computer Science', 2, 'Semester 2', 'Prof. Chen', 69, 'M101'),
+('C153', 'Data Structures', 3, 'Semester 1', 'Dr. Brown', 56, 'M101'),
+('C154', 'Networking', 4, 'Semester 1', 'Dr. Miller', 98, 'M102'),
+('C155', 'Operating Systems', 3, 'Semester 1', 'Dr. Lee', 164, 'M101'),
+('C156', 'Economics', 3, 'Semester 1', 'Prof. Davis', 109, 'M108'),
+('C157', 'Operating Systems', 2, 'Semester 1', 'Prof. Davis', 69, 'M101'),
+('C158', 'Computer Science', 3, 'Semester 1', 'Dr. Brown', 125, 'M101'),
+('C159', 'Literature', 3, 'Semester 1', 'Prof. Smith', 188, 'M104'),
+('C160', 'English Composition', 3, 'Semester 1', 'Dr. Johnson', 88, 'M104'),
+('C161', 'History', 2, 'Semester 1', 'Prof. Chen', 184, 'M110'),
+('C162', 'Philosophy', 3, 'Semester 1', 'Prof. Chen', 60, 'M105'),
+('C163', 'Economics', 2, 'Semester 1', 'Prof. Chen', 183, 'M108'),
+('C164', 'English Composition', 2, 'Semester 1', 'Prof. Davis', 141, 'M104'),
+('C165', 'Artificial Intelligence', 4, 'Semester 1', 'Prof. Davis', 151, 'M101'),
+('C166', 'History', 3, 'Semester 1', 'Dr. Kumar', 55, 'M110'),
+('C167', 'Software Engineering', 3, 'Semester 1', 'Dr. Miller', 162, 'M102'),
+('C168', 'Networking', 4, 'Semester 1', 'Dr. Johnson', 193, 'M102'),
+('C169', 'Computer Science', 4, 'Semester 1', 'Dr. Lee', 50, 'M101'),
+('C170', 'Statistics', 4, 'Semester 1', 'Prof. Davis', 140, 'M107'),
+('C171', 'Cybersecurity', 4, 'Semester 1', 'Dr. Miller', 159, 'M101'),
+('C172', 'Chemistry', 2, 'Semester 1', 'Dr. Johnson', 189, 'M106'),
+('C173', 'Computer Science', 2, 'Semester 2', 'Prof. Smith', 177, 'M101'),
+('C174', 'Computer Science', 3, 'Semester 1', 'Dr. Brown', 92, 'M101'),
+('C175', 'Physics', 2, 'Semester 1', 'Dr. Kumar', 194, 'M109'),
+('C176', 'Economics', 2, 'Semester 1', 'Dr. Lee', 95, 'M108'),
+('C177', 'Statistics', 2, 'Semester 1', 'Dr. Miller', 94, 'M107'),
+('C178', 'English Composition', 2, 'Semester 1', 'Prof. Davis', 177, 'M104'),
+('C179', 'English Composition', 3, 'Semester 1', 'Dr. Kumar', 103, 'M104'),
+('C180', 'Software Engineering', 4, 'Semester 1', 'Prof. Chen', 133, 'M102'),
+('C181', 'Statistics', 3, 'Semester 1', 'Dr. Miller', 154, 'M107'),
+('C182', 'Statistics', 4, 'Semester 1', 'Dr. Johnson', 55, 'M107'),
+('C183', 'English Composition', 4, 'Semester 1', 'Dr. Brown', 61, 'M104'),
+('C184', 'Database Systems', 3, 'Semester 2', 'Dr. Lee', 53, 'M101'),
+('C185', 'Data Structures', 4, 'Semester 1', 'Dr. Johnson', 88, 'M101'),
+('C186', 'Machine Learning', 4, 'Semester 2', 'Dr. Lee', 176, 'M101'),
+('C187', 'Statistics', 3, 'Semester 1', 'Dr. Brown', 121, 'M107'),
+('C188', 'Literature', 4, 'Semester 1', 'Dr. Kumar', 154, 'M104'),
+('C189', 'Data Structures', 3, 'Semester 2', 'Dr. Lee', 154, 'M101'),
+('C190', 'Statistics', 2, 'Semester 1', 'Dr. Lee', 62, 'M107'),
+('C191', 'Software Engineering', 3, 'Semester 1', 'Dr. Johnson', 168, 'M102'),
+('C192', 'Cybersecurity', 4, 'Semester 1', 'Dr. Brown', 62, 'M101'),
+('C193', 'Artificial Intelligence', 4, 'Semester 1', 'Prof. Smith', 122, 'M101'),
+('C194', 'Data Structures', 3, 'Semester 2', 'Dr. Miller', 133, 'M101'),
+('C195', 'Philosophy', 4, 'Semester 1', 'Dr. Lee', 69, 'M105'),
+('C196', 'Computer Science', 2, 'Semester 1', 'Dr. Johnson', 115, 'M101'),
+('C197', 'Statistics', 4, 'Semester 1', 'Prof. Chen', 114, 'M107'),
+('C198', 'English Composition', 3, 'Semester 1', 'Dr. Johnson', 183, 'M104'),
+('C199', 'Networking', 3, 'Semester 1', 'Prof. Davis', 92, 'M102'),
+('C200', 'Physics', 3, 'Semester 1', 'Dr. Miller', 85, 'M109');
+
+-- 7. Student Grades (Enrollment) Table
+CREATE TABLE student_grades (
+    EnrollmentID VARCHAR(10) PRIMARY KEY,
+    StudentID VARCHAR(10) REFERENCES students(StudentID),
+    CourseID VARCHAR(10) REFERENCES courses(CourseID),
+    Grade VARCHAR(5)
+);
+
+INSERT INTO student_grades (EnrollmentID, StudentID, CourseID, Grade) VALUES
+('E001', 'S001', 'C189', 'A-'), ('E002', 'S001', 'C194', 'A-'), ('E003', 'S001', 'C111', 'A'), ('E004', 'S001', 'C159', 'B-'), ('E005', 'S001', 'C101', 'B+'), ('E006', 'S001', 'C102', 'A'), ('E007', 'S001', 'C103', 'B'),
+('E008', 'S002', 'C150', 'C'), ('E009', 'S002', 'C108', 'B+'), ('E010', 'S002', 'C159', 'B'), ('E011', 'S002', 'C141', 'C+'), ('E012', 'S002', 'C109', 'B'),
+('E013', 'S003', 'C128', 'B'), ('E014', 'S003', 'C144', 'B'), ('E015', 'S003', 'C125', 'A'), ('E016', 'S003', 'C110', 'B'),
+('E017', 'S004', 'C119', 'A'), ('E018', 'S004', 'C162', 'C+'), ('E019', 'S004', 'C151', 'B-'), ('E020', 'S004', 'C196', 'B+'), ('E021', 'S004', 'C129', 'A'),
+('E022', 'S005', 'C181', 'B'), ('E023', 'S005', 'C197', 'B-'), ('E024', 'S005', 'C190', 'B-'), ('E025', 'S005', 'C166', 'B-'), ('E026', 'S005', 'C138', 'A'),
+('E027', 'S008', 'C114', 'B+'), ('E028', 'S008', 'C154', 'F'), ('E029', 'S008', 'C109', 'B'), ('E030', 'S008', 'C145', 'A-'), ('E031', 'S008', 'C112', 'A'),
+('E032', 'S010', 'C126', 'B+'), ('E033', 'S010', 'C111', 'B+'), ('E034', 'S010', 'C165', 'F'), ('E035', 'S010', 'C134', 'B+'), ('E036', 'S010', 'C162', 'A-'), ('E037', 'S010', 'C101', 'B'), ('E038', 'S010', 'C102', 'B+'),
+('E039', 'S011', 'C114', 'B'), ('E040', 'S011', 'C191', 'B+'), ('E041', 'S011', 'C167', 'C+'), ('E042', 'S011', 'C130', 'C+'), ('E043', 'S011', 'C188', 'B+'),
+('E044', 'S012', 'C154', 'B'), ('E045', 'S012', 'C191', 'B+'), ('E046', 'S012', 'C199', 'A-'), ('E047', 'S012', 'C146', 'C+'), ('E048', 'S012', 'C190', 'B-'),
+('E049', 'S013', 'C180', 'B+'), ('E050', 'S013', 'C109', 'B-'), ('E051', 'S013', 'C191', 'A-'), ('E052', 'S013', 'C150', 'A'), ('E053', 'S013', 'C198', 'B+'),
+('E054', 'S015', 'C142', 'F'), ('E055', 'S015', 'C114', 'C+'), ('E056', 'S015', 'C180', 'A-'), ('E057', 'S015', 'C109', 'C+'), ('E058', 'S015', 'C108', 'B-'),
+('E059', 'S018', 'C122', 'A-'), ('E060', 'S018', 'C125', 'D'), ('E061', 'S018', 'C144', 'A-'), ('E062', 'S018', 'C175', 'B'), ('E063', 'S018', 'C182', 'D'),
+('E064', 'S020', 'C135', 'B+'), ('E065', 'S020', 'C104', 'B-'), ('E066', 'S020', 'C103', 'A'), ('E067', 'S020', 'C182', 'B+'), ('E068', 'S020', 'C144', 'C+'),
+('E069', 'S027', 'C125', 'B-'), ('E070', 'S027', 'C128', 'B+'), ('E071', 'S027', 'C144', 'F'), ('E072', 'S027', 'C180', 'B+'), ('E073', 'S027', 'C172', 'A'),
+('E074', 'S030', 'C162', 'B'), ('E075', 'S030', 'C119', 'B-'), ('E076', 'S030', 'C140', 'B'), ('E077', 'S030', 'C155', 'C+'), ('E078', 'S030', 'C197', 'F'),
+('E079', 'S034', 'C124', 'C+'), ('E080', 'S034', 'C144', 'B-'), ('E081', 'S034', 'C125', 'B'), ('E082', 'S034', 'C186', 'B-'),
+('E083', 'S037', 'C137', 'F'), ('E084', 'S037', 'C186', 'B-'), ('E085', 'S037', 'C134', 'D'), ('E086', 'S037', 'C198', 'A-'), ('E087', 'S037', 'C101', 'A-'), ('E088', 'S037', 'C102', 'B'), ('E089', 'S037', 'C103', 'B+'),
+('E090', 'S040', 'C135', 'A-'), ('E091', 'S040', 'C103', 'F'), ('E092', 'S040', 'C143', 'A-'), ('E093', 'S040', 'C113', 'B-'), ('E094', 'S040', 'C132', 'B+'),
+('E095', 'S043', 'C163', 'B+'), ('E096', 'S043', 'C156', 'F'), ('E097', 'S043', 'C176', 'B-'), ('E098', 'S043', 'C189', 'B-'), ('E099', 'S043', 'C184', 'B-'),
+('E100', 'S046', 'C190', 'B+'), ('E101', 'S046', 'C170', 'C'), ('E102', 'S046', 'C182', 'B'), ('E103', 'S046', 'C187', 'B'), ('E104', 'S046', 'C101', 'B'),
+('E105', 'S050', 'C139', 'C+');
+
+-- 8. Recovery Tasks Table
+CREATE TABLE recovery_tasks (
+    TaskID VARCHAR(10) PRIMARY KEY,
+    Phase VARCHAR(20),
+    Description TEXT
+);
+
+INSERT INTO recovery_tasks (TaskID, Phase, Description) VALUES
+('T01', 'Phase1', 'Do'),
+('T02', 'Phase2', 'Do_Quiz'),
+('T03', 'Phase3', 'Final_Exam'),
+('T04', 'Phase1', 'Review_All_Modules');
+
+-- 9. Recovery Plans Table
+CREATE TABLE recovery_plans (
+    Task_ID VARCHAR(10) REFERENCES recovery_tasks(TaskID),
+    EnrollmentID VARCHAR(10) REFERENCES student_grades(EnrollmentID)
+);
+
+INSERT INTO recovery_plans (Task_ID, EnrollmentID) VALUES
+('T02', 'E071'),
+('T03', 'E071'),
+('T04', 'E071');
