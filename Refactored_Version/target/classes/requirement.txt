@@ -1,0 +1,11 @@
+RequirementID	Year	Semester	RequiredCourseCount	RequiredCredits
+R01	Freshman	Semester 1	5	14
+R02	Freshman	Semester 2	5	14
+R03	Sophomore	Semester 1	5	14
+R04	Sophomore	Semester 2	5	14
+R05	Junior	Semester 1	5	14
+R06	Junior	Semester 2	5	14
+R07	Senior	Semester 1	4	12
+R08	Senior	Semester 2	4	12
+R09	Senior	Semester 1	7	21
+R10	Senior	Semester 2	7	21

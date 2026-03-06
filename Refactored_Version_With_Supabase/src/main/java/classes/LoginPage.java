@@ -99,7 +99,6 @@ public class LoginPage extends JFrame {
                 System.out.println("Last logout: " + user.getLastLogout());
                 roleNavigator(session);
             } else {
-                System.out.println("Invalid");
                 JOptionPane.showMessageDialog(LoginPage.this, "Invalid username or password");
             }
         });

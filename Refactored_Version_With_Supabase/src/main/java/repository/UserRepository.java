@@ -1,12 +1,9 @@
 package repository;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.sql.Connection;
 import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,155 +11,144 @@ import classes.*;
 
 public class UserRepository {
 
-    public static void createUser(User newUser) throws IOException{
-        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(ResourceManager.getUserDataPath(),true))) {
-            bufferedWriter.write(formatUserToString(newUser));
-            bufferedWriter.newLine();
-        }
+    public static void createUser(User newUser) throws Exception{
+        String insertString = """
+                    INSERT INTO user_accounts (Username, Password, FirstName, LastName, Email, Role, LastLogin, LastLogout)
+                    VALUES
+                    (?,?,?,?,?,?,?,?)
+                """;
+
+        Connection conn = DatabaseManager.getConnection();
+        PreparedStatement statement = conn.prepareStatement(insertString);
+
+        statement.setString(1, newUser.getUsername());
+        statement.setString(2, newUser.getPassword());
+        statement.setString(3, newUser.getFirstName());
+        statement.setString(4, newUser.getLastName());
+        statement.setString(5, newUser.getEmail());
+        statement.setString(6, newUser.getRole());
+        statement.setLong(7, newUser.getLastLogin().getTime());
+        statement.setLong(8, newUser.getLastLogout().getTime());
+        statement.executeUpdate();
     }
 
     public static void deleteUser(User modifiedUser){
-        File originalFile = new File(ResourceManager.getUserDataPath());
-        File tempFile = new File("temp.txt");
+        String deleteString = "DELETE FROM user_accounts WHERE username = ?";
 
-        try (
-            BufferedReader reader = new BufferedReader(new FileReader(originalFile));
-            BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile))
-        ) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] data = line.split("\t");
-                
-                // CHECK: Is this the user we are updating?
-                if (!(data[0].equals(modifiedUser.getUsername()))) {
-                    // NO: Just copy the existing line 
-                    writer.write(line);
-                    writer.newLine();
-                }
-            }
+        try (Connection conn = DatabaseManager.getConnection();
+        PreparedStatement statement = conn.prepareStatement(deleteString)){
+            statement.setString(1, modifiedUser.getUsername());
+            statement.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        // SWAP: Delete old file, rename temp file to "users.txt"
-        originalFile.delete();
-        tempFile.renameTo(originalFile);
+        
     }
 
     public static User findUserByUsername(String username) {
-        try (BufferedReader reader = new BufferedReader(new FileReader(ResourceManager.getUserDataPath()))) {
-            reader.readLine();//for skipping the header
-            String line;
-            while ((line = reader.readLine()) != null){
-                String[] userData = line.split("\t");
-                if (userData[0].equals(username)){
-                    User user = new User(
-                    userData[0], userData[1], 
-                    userData[2], userData[3], 
-                    userData[4], userData[5], 
-                    new Date(Long.parseLong(userData[6].trim())), new Date(Long.parseLong(userData[7].trim())));
-                    
-                    return user;
-                }
-                
+        String findString = "SELECT * FROM user_accounts where username = ?";
+        try(Connection conn = DatabaseManager.getConnection(); PreparedStatement statement = conn.prepareStatement(findString)){
+            statement.setString(1, username);
+
+            ResultSet rs = statement.executeQuery();
+            if (rs.next()) {
+                User user = new User(
+                    rs.getString("username"), 
+                    rs.getString("password"), 
+                    rs.getString("firstname"), 
+                    rs.getString("lastname"), 
+                    rs.getString("email"), 
+                    rs.getString("role"), 
+                    new Date(Long.parseLong(rs.getString("lastlogin"))),
+                    new Date(Long.parseLong(rs.getString("lastlogout")))
+                );
+                return user;
             }
-        } catch (Exception e) {
-            System.out.println(e);
+        }catch(Exception e){
+            e.printStackTrace();
         }
         return null;
     }
 
     public static List<User> loadAllUsers(){
         List<User> users = new ArrayList<>();
-        
-        try (BufferedReader reader = new BufferedReader(new FileReader(ResourceManager.getUserDataPath()))) {
-            reader.readLine();//for skipping the header
-            String line;
-            while ((line = reader.readLine()) != null){
-                String[] userData = line.split("\t");
-                User user = new User(
-                    userData[0], userData[1], 
-                    userData[2], userData[3], 
-                    userData[4], userData[5], 
-                    new Date(Long.parseLong(userData[6].trim())), 
-                    new Date(Long.parseLong(userData[7].trim()))
+        String loadString = "Select * FROM user_accounts";
+        try (Connection conn = DatabaseManager.getConnection(); PreparedStatement statement = conn.prepareStatement(loadString)) {
+            ResultSet rs = statement.executeQuery();
+            while (rs.next()) {
+                users.add(
+                    new User(
+                        rs.getString("username"), 
+                        rs.getString("password"), 
+                        rs.getString("firstname"), 
+                        rs.getString("lastname"), 
+                        rs.getString("email"), 
+                        rs.getString("role"), 
+                        new Date(Long.parseLong(rs.getString("lastlogin"))),
+                        new Date(Long.parseLong(rs.getString("lastlogout")))
+                    )
                 );
-                users.add(user);
             }
         } catch (Exception e) {
-            System.out.println(e);
+            e.printStackTrace();
         }
-        System.out.print(users);
         return users;
     }
 
     public static List<User> loadUserBasedOnRole(String role){
         List<User> users = new ArrayList<>();
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(ResourceManager.getUserDataPath()))) {
-            reader.readLine();//for skipping the header
-            String line;
-            while ((line = reader.readLine()) != null){
-                String[] userData = line.split("\t");
-                if (userData[5].equalsIgnoreCase(role)){
-                    User user = new User(
-                    userData[0], userData[1], 
-                    userData[2], userData[3], 
-                    userData[4], userData[5], 
-                    new Date(Long.parseLong(userData[6].trim())), new Date(Long.parseLong(userData[7].trim())));
-                    
-                    users.add(user);
-                }
-            }
-        } catch (Exception e) {
-            System.out.println(e);
-        }
-        System.out.println(users);
-        return users.isEmpty() ? null:users;
-    }
-
-    public static void updateUser(User modifiedUser) {
-        File originalFile = new File(ResourceManager.getUserDataPath());
-        File tempFile = new File("temp.txt");
-
-        try (
-            BufferedReader reader = new BufferedReader(new FileReader(originalFile));
-            BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile))
-        ) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] data = line.split("\t");
-                
-                // CHECK: Is this the user we are updating?
-                if (data[0].equals(modifiedUser.getUsername())) {
-                    
-                    // YES: Write the NEW data instead of the old line
-                    writer.write(formatUserToString(modifiedUser));
-                    
-                } else {
-                    
-                    // NO: Just copy the existing line exactly as is
-                    writer.write(line);
-                }
-                writer.newLine();
+        String loadString = "Select * FROM user_accounts WHERE role = ?";
+        try (Connection conn = DatabaseManager.getConnection(); PreparedStatement statement = conn.prepareStatement(loadString)) {
+            statement.setString(1, role);
+            ResultSet rs = statement.executeQuery();
+            while (rs.next()) {
+                users.add(
+                    new User(
+                        rs.getString("username"), 
+                        rs.getString("password"), 
+                        rs.getString("firstname"), 
+                        rs.getString("lastname"), 
+                        rs.getString("email"), 
+                        role, 
+                        new Date(Long.parseLong(rs.getString("lastlogin"))),
+                        new Date(Long.parseLong(rs.getString("lastlogout")))
+                    )
+                );
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        // SWAP: Delete old file, rename temp file to "users.txt"
-        originalFile.delete();
-        tempFile.renameTo(originalFile);
+        return users.isEmpty() ? null:users;
     }
 
-    private static String formatUserToString(User user){
-        return user.getUsername() + "\t" +
-           user.getPassword() + "\t" +
-           user.getFirstName() + "\t" +
-           user.getLastName() + "\t" +
-           user.getEmail() + "\t" +
-           user.getRole() + "\t" +
-           user.getLastLogin().getTime() + "\t" +
-           user.getLastLogout().getTime();
+    public static void updateUser(User modifiedUser) {
+        String updateString = """
+                    UPDATE user_accounts SET(
+                        username = ?,
+                        password = ?, 
+                        firstname = ?,
+                        lastname = ?,
+                        email = ?,
+                        role = ?,
+                        lastlogin = ?,
+                        lastlogout = ?                   
+                    )
+                """;
+
+        try(Connection conn = DatabaseManager.getConnection(); PreparedStatement statement = conn.prepareStatement(updateString)){
+            statement.setString(1, modifiedUser.getUsername());
+            statement.setString(2, modifiedUser.getPassword());
+            statement.setString(3, modifiedUser.getFirstName());
+            statement.setString(4, modifiedUser.getLastName());
+            statement.setString(5, modifiedUser.getEmail());
+            statement.setString(6, modifiedUser.getRole());
+            statement.setLong(7, modifiedUser.getLastLogin().getTime());
+            statement.setLong(8, modifiedUser.getLastLogout().getTime());
+            statement.executeUpdate();
+        }catch(Exception e){
+            e.printStackTrace();
+        }
     }
 }

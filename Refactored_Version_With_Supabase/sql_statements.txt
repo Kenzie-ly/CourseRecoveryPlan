@@ -263,11 +263,11 @@ INSERT INTO recovery_tasks (TaskID, Phase, Description) VALUES
 
 -- 9. Recovery Plans Table
 CREATE TABLE recovery_plans (
-    Task_ID VARCHAR(10) REFERENCES recovery_tasks(TaskID),
+    taskid VARCHAR(10) REFERENCES recovery_tasks(TaskID),
     EnrollmentID VARCHAR(10) REFERENCES student_grades(EnrollmentID)
 );
 
-INSERT INTO recovery_plans (Task_ID, EnrollmentID) VALUES
+INSERT INTO recovery_plans (taskid, EnrollmentID) VALUES
 ('T02', 'E071'),
 ('T03', 'E071'),
 ('T04', 'E071');

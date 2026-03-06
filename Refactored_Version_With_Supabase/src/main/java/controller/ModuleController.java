@@ -37,7 +37,7 @@ public class ModuleController {
     }
 
     public List<Enrollement> getEnrollementBySemOfStudent(Student s, String sem){
-        return EnrollmentRepository.getStudentEnrollmentsbySem(s, sem);        
+        return EnrollmentRepository.getStudentEnrollmentsBySem(s, sem);        
     }
 
     public List<Course> getAllCoursesTakenByFailedStudents(){
@@ -76,7 +76,7 @@ public class ModuleController {
 
     public double calcStudentGPA(Student student, String sem){
         double grades = 0;
-        for(var enrollement :EnrollmentRepository.getStudentEnrollmentsbySem(student, sem)){
+        for(var enrollement :EnrollmentRepository.getStudentEnrollmentsBySem(student, sem)){
             grades = grades + points.get(enrollement.getGrade());
         }
 

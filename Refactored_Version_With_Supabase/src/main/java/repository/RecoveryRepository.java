@@ -1,14 +1,11 @@
 package repository;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.sql.PreparedStatement;
+import java.sql.Connection;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+
 
 import classes.Enrollement;
 import classes.RecoveryPlan;
@@ -16,161 +13,111 @@ import classes.RecoveryTask;
 
 public class RecoveryRepository {
 
-    public static void deleteRecoveryPlanByEnrollment(List<Enrollement> enrollements) throws Exception{
-        File originalFile = new File(ResourceManager.getRecoveryPlanPath());
-        File tempFile = new File("temp.txt");
-        List<String> enrollmentIDs = enrollements.stream().map(Enrollement::getEnrollmentID).toList();
+    public static void deleteRecoveryPlanByEnrollment(List<Enrollement> enrollements) {
+        String query = "DELETE FROM recovery_plans WHERE enrollmentid = ?";
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(originalFile));
-            BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile))) {
-            //removing parts
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] data = line.split("\t");
-
-                if (!(enrollmentIDs.contains(data[1]))) {
-                    writer.write(line);
-                    writer.newLine();
-                }
+        try (Connection conn = DatabaseManager.getConnection(); PreparedStatement statement = conn.prepareStatement(query)) {
+            for (Enrollement enrollment : enrollements) {
+                statement.setString(1, enrollment.getEnrollmentID());
+                statement.executeUpdate();
             }
-        } 
-
-        if (!originalFile.delete()) {
-            System.out.println("Could not delete original file. Check permissions or if file is open.");
-            return; 
-        }
-
-        // Safety Check: Rename failed?
-        if (!tempFile.renameTo(originalFile)) {
-            System.out.println("Could not rename temp file. You might be on a different drive partition.");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
-    public static RecoveryTask findRecoveryTaskByID(String id){
-        try (BufferedReader reader = new BufferedReader(new FileReader(ResourceManager.getRecoveryTaskPath()))) {
-            reader.readLine();//for skipping the header
-            String line;
-            while ((line = reader.readLine()) != null){
-                String[] recoveryTaskData = line.split("\t");
-                if (recoveryTaskData[0].equals(id)){
-                    RecoveryTask recoveryTask = new RecoveryTask(
-                        recoveryTaskData[0],
-                        recoveryTaskData[1],
-                        recoveryTaskData[2]
-                    );
-                    return recoveryTask;
-                }
-                
+    public static RecoveryTask findRecoveryTaskByID(String id) {
+        String query = "SELECT * FROM recovery_tasks WHERE taskid = ?";
+
+        try (Connection conn = DatabaseManager.getConnection(); PreparedStatement statement = conn.prepareStatement(query)) {
+            statement.setString(1, id);
+            ResultSet rs = statement.executeQuery();
+            if (rs.next()) {
+                return new RecoveryTask(
+                    rs.getString("taskid"),
+                    rs.getString("phase"),
+                    rs.getString("description")
+                );
             }
         } catch (Exception e) {
-            System.out.println(e);
+            e.printStackTrace();
         }
         return null;
     }
 
-    public static void updateRecoveryPlan(List<RecoveryPlan> modifiedPlans) throws IOException {
-        File originalFile = new File(ResourceManager.getRecoveryPlanPath());
-        File tempFile = new File("temp.txt");
+    public static void updateRecoveryPlan(List<RecoveryPlan> modifiedPlans) {
+        String deleteQuery = "DELETE FROM recovery_plans WHERE taskid = ? AND enrollmentid = ?";
+        String insertQuery = "INSERT INTO recovery_plans (taskid, enrollmentid) VALUES (?, ?)";
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(originalFile));
-            BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile))) {
-            //removing parts
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] data = line.split("\t");
-                Optional<RecoveryPlan> deletedPlan = modifiedPlans.stream()
-                    .filter(p -> !(p.getTaskID().equals(data[0])) && p.getEnrollmentID().equals(data[1]))
-                    .findFirst();
+        try (Connection conn = DatabaseManager.getConnection(); PreparedStatement deleteStmt = conn.prepareStatement(deleteQuery); PreparedStatement insertStmt = conn.prepareStatement(insertQuery)) {
+            for (RecoveryPlan plan : modifiedPlans) {
+                deleteStmt.setString(1, plan.getTaskID());
+                deleteStmt.setString(2, plan.getEnrollmentID());
+                deleteStmt.executeUpdate();
 
-                if (!(deletedPlan.isPresent())) {
-                    writer.write(line);
-                    writer.newLine();
-                }
+                insertStmt.setString(1, plan.getTaskID());
+                insertStmt.setString(2, plan.getEnrollmentID());
+                insertStmt.executeUpdate();
             }
-        } 
-
-        if (!originalFile.delete()) {
-            System.out.println("Could not delete original file. Check permissions or if file is open.");
-            return; 
-        }
-
-        // Safety Check: Rename failed?
-        if (!tempFile.renameTo(originalFile)) {
-            System.out.println("Could not rename temp file. You might be on a different drive partition.");
-        }
-
-        //add the new plans
-        addRecoveryPlan(modifiedPlans);
-    }
-
-
-    public static void updateRecoveryTask(RecoveryTask modifiedTask) throws IOException {
-        File originalFile = new File(ResourceManager.getRecoveryTaskPath());
-        File tempFile = new File("temp.txt");
-
-        // 1. USE TRY-WITH-RESOURCES to auto-close streams
-        try (BufferedReader reader = new BufferedReader(new FileReader(originalFile));
-            BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile))) { // removed 'true' (append)
-
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] data = line.split("\t");
-
-                // CHECK: Is this the user we are updating?
-                if (data[0].equals(modifiedTask.getTaskID())) {
-                    // YES: Write the NEW data
-                    writer.write(formatRecoveryTask(modifiedTask));
-                } else {
-                    // NO: Copy existing line
-                    writer.write(line);
-                }
-                writer.newLine();
-            }
-            
-        } // <--- Streams close AUTOMATICALLY here. The file lock is released.
-
-        // 2. NOW it is safe to swap the files
-        
-        // Safety Check: Delete failed?
-        if (!originalFile.delete()) {
-            System.out.println("Could not delete original file. Check permissions or if file is open.");
-            return; 
-        }
-
-        // Safety Check: Rename failed?
-        if (!tempFile.renameTo(originalFile)) {
-            System.out.println("Could not rename temp file. You might be on a different drive partition.");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
-    public static void addRecoveryTask(RecoveryTask newRecoveryTask) throws IOException{
-        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(ResourceManager.getRecoveryTaskPath(),true))) {
-            bufferedWriter.write(formatRecoveryTask(newRecoveryTask));
-            bufferedWriter.newLine();
+    public static void updateRecoveryTask(RecoveryTask modifiedTask) {
+        String query = "UPDATE recovery_tasks SET phase = ?, description = ? WHERE taskid = ?";
+
+        try (Connection conn = DatabaseManager.getConnection(); PreparedStatement statement = conn.prepareStatement(query)) {
+            statement.setString(1, modifiedTask.getPhase());
+            statement.setString(2, modifiedTask.getTask());
+            statement.setString(3, modifiedTask.getTaskID());
+            statement.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
-    public static void addRecoveryPlan(List<RecoveryPlan> recoveryPlans)throws IOException{
-        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(ResourceManager.getRecoveryPlanPath(),true))) {
-            for (var plan: recoveryPlans){
-                bufferedWriter.write(formatRecoveryPlan(plan));
-                bufferedWriter.newLine();
+    public static void addRecoveryTask(RecoveryTask newRecoveryTask) {
+        String query = "INSERT INTO recovery_tasks (taskid, phase, description) VALUES (?, ?, ?)";
+
+        try (Connection conn = DatabaseManager.getConnection(); PreparedStatement statement = conn.prepareStatement(query)) {
+            statement.setString(1, newRecoveryTask.getTaskID());
+            statement.setString(2, newRecoveryTask.getPhase());
+            statement.setString(3, newRecoveryTask.getTask());
+            statement.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void addRecoveryPlan(List<RecoveryPlan> recoveryPlans) {
+        String query = "INSERT INTO recovery_plans (taskid, enrollmentid) VALUES (?, ?)";
+
+        try (Connection conn = DatabaseManager.getConnection(); PreparedStatement statement = conn.prepareStatement(query)) {
+            for (RecoveryPlan plan : recoveryPlans) {
+                statement.setString(1, plan.getTaskID());
+                statement.setString(2, plan.getEnrollmentID());
+                statement.executeUpdate();
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
     public static List<RecoveryTask> loadAllRecoveryTask() {
         List<RecoveryTask> recoveryTasks = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(ResourceManager.getRecoveryTaskPath()))) {
-            reader.readLine();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.trim().isEmpty()) continue;
-                String[] value = line.split("\t");
+        String query = "SELECT * FROM recovery_tasks";
 
-                recoveryTasks.add(new RecoveryTask(value[0], value[1], value[2]));
+        try (Connection conn = DatabaseManager.getConnection(); PreparedStatement statement = conn.prepareStatement(query)) {
+            ResultSet rs = statement.executeQuery();
+            while (rs.next()) {
+                recoveryTasks.add(new RecoveryTask(
+                    rs.getString("taskid"),
+                    rs.getString("phase"),
+                    rs.getString("description")
+                ));
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return recoveryTasks;
@@ -178,36 +125,19 @@ public class RecoveryRepository {
 
     public static List<RecoveryPlan> loadAllRecoveryPlan() {
         List<RecoveryPlan> recoveryPlans = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(ResourceManager.getRecoveryPlanPath()))) {
-            reader.readLine();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.trim().isEmpty()) continue;
-                String[] value = line.split("\t");
+        String query = "SELECT * FROM recovery_plans";
 
+        try (Connection conn = DatabaseManager.getConnection(); PreparedStatement statement = conn.prepareStatement(query)) {
+            ResultSet rs = statement.executeQuery();
+            while (rs.next()) {
                 recoveryPlans.add(new RecoveryPlan(
-                    findRecoveryTaskByID(value[0]), 
-                    EnrollmentRepository.findEnrollementByID(value[1]))
-                );
+                    findRecoveryTaskByID(rs.getString("taskid")),
+                    EnrollmentRepository.findEnrollmentByID(rs.getString("enrollmentid"))
+                ));
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return recoveryPlans;
-    }
-
-    private static String formatRecoveryTask(RecoveryTask recoveryTask){
-        return(
-            recoveryTask.getTaskID()  + "\t" +
-            recoveryTask.getPhase() + "\t" +
-            recoveryTask.getTask()
-        );
-    }
-
-    private static String formatRecoveryPlan(RecoveryPlan recoveryPlan){
-        return(
-            recoveryPlan.getTaskID() + "\t" +
-            recoveryPlan.getEnrollmentID()
-        );
     }
 }
