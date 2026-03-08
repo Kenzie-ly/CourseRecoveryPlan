@@ -5,8 +5,13 @@ import javax.swing.table.DefaultTableModel;
 
 import controller.LoginController;
 import controller.ModuleController;
+import repository.EnrollmentRepository;
 
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 public class StudentEligibilityPage extends JFrame {
     private LoginController session;
@@ -15,13 +20,20 @@ public class StudentEligibilityPage extends JFrame {
     private JTable jTablePass;
     private JTable jTableFailed;
     private ModuleController moduleController;
+    private JLabel loadingLabel;
+    private JPanel tablePanel;
+    private CardLayout cardLayout;
+    private List<Object[]> passedRows;
+    private List<Object[]> failedRows;
+    List<Student> allStudents;
 
     public StudentEligibilityPage(LoginController session) {
-        this.session = session;
+        
         this.moduleController = new ModuleController();
-        this.initFrame();
-        this.loadPassedStudentData();
-        this.loadFailedStudentData();
+        this.session = session;
+        this.allStudents = moduleController.getAllEnrolledStudents();
+        this.initFrame(); 
+        this.loadDataInBackground();
     }
 
     private void initFrame() {
@@ -47,8 +59,8 @@ public class StudentEligibilityPage extends JFrame {
         headerPanel.add(refreshBtn, "East");
         mainPanel.add(headerPanel, "North");
 
-        this.failedModel = new DefaultTableModel(new String[]{"Student ID", "Name", "Major", "CGPA"}, 0);
-        this.passModel = new DefaultTableModel(new String[]{"Student ID", "Name", "Major", "CGPA"}, 0);
+        this.failedModel = new DefaultTableModel(new String[]{"Student ID", "Name", "Major", "GPA"}, 0);
+        this.passModel = new DefaultTableModel(new String[]{"Student ID", "Name", "Major", "GPA"}, 0);
         this.jTableFailed = new JTable(failedModel);
         this.jTablePass = new JTable(passModel);
         JScrollPane scrollPanePass = new JScrollPane(jTablePass);
@@ -62,13 +74,20 @@ public class StudentEligibilityPage extends JFrame {
         topButtonPanel.add(passStudentBtn);
         topButtonPanel.add(failStudentBtn);
 
-        JPanel tablePanel = new JPanel(new CardLayout());
+        tablePanel = new JPanel(new CardLayout());
         tablePanel.add(scrollPanePass, "PASS");
         tablePanel.add(scrollPaneFailed, "FAIL");
-        CardLayout cl = (CardLayout) (tablePanel.getLayout());
+        
+        // Add loading label
+        loadingLabel = new JLabel("Loading student data...", SwingConstants.CENTER);
+        loadingLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        tablePanel.add(loadingLabel, "LOADING");
+        
+        cardLayout = (CardLayout) (tablePanel.getLayout());
+        cardLayout.show(tablePanel, "LOADING");
 
-        passStudentBtn.addActionListener(e -> cl.show(tablePanel, "PASS"));
-        failStudentBtn.addActionListener(e -> cl.show(tablePanel, "FAIL"));
+        passStudentBtn.addActionListener(e -> cardLayout.show(tablePanel, "PASS"));
+        failStudentBtn.addActionListener(e -> cardLayout.show(tablePanel, "FAIL"));
 
         JPanel bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.add(topButtonPanel, BorderLayout.WEST);
@@ -85,20 +104,86 @@ public class StudentEligibilityPage extends JFrame {
         this.add(mainPanel);
     }
 
+    private void loadDataInBackground() {
+        cardLayout.show(tablePanel, "LOADING");
+
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Void doInBackground() {
+                // DB Query 2: all enrollments at once with courses joined — no per-row lookups
+                Map<String, List<Enrollement>> enrollmentMap =
+                        EnrollmentRepository.getAllEnrollmentsGroupedByStudent();
+
+                passedRows = new ArrayList<>();
+                failedRows = new ArrayList<>();
+
+                for (Student s : allStudents) {
+                    List<Enrollement> enrollements =
+                            enrollmentMap.getOrDefault(s.getStudentID(), List.of());
+
+                    int failedCount = 0;
+                    for (Enrollement e : enrollements) {
+                        String grade = e.getGrade();
+                        if (grade != null && grade.matches("[DEF][+-]?")) {
+                            failedCount++;
+                        }
+                    }
+
+                    double roundedCGPA = Math.round(moduleController.calcStudentGPA(s, s.getSem()) * 100.0) / 100.0;
+                    boolean canProgress = failedCount <= 3;
+
+                    String id = s.getStudentID();
+                    String name = s.getFirstName() + " " + s.getLastName();
+                    String majorName = s.getMajor().getMajorName();
+
+                    if (roundedCGPA >= 2.0 && canProgress) {
+                        passedRows.add(new Object[]{id, name, majorName, roundedCGPA});
+                    } else {
+                        failedRows.add(new Object[]{id, name, majorName, roundedCGPA});
+                    }
+                }
+
+                SwingUtilities.invokeLater(() -> updateTables());
+                return null;
+            }
+        };
+        worker.execute();
+    }
+
+    private void updateTables() {
+        passModel.setRowCount(0);
+        failedModel.setRowCount(0);
+
+        for (Object[] row : passedRows) {
+            passModel.addRow(row);
+        }
+
+        for (Object[] row : failedRows) {
+            failedModel.addRow(row);
+        }
+
+        // Switch from loading to pass tab
+        cardLayout.show(tablePanel, "PASS");
+    }
+
     private void sendEmailNotificationPass() {
+        String subject = "Pass/Fail Notice";
         for (Student s : moduleController.getAllEnrolledStudents()) {
             String name = s.getFirstName() + " " + s.getLastName();
-            double CGPA = moduleController.calcStudentCGPA(s);
-            if(CGPA >= 2.0){
-                String studentEmail = s.getEmail();
-                String subject = "Pass/Fail Notice";
-                String bodyText = "We are glad to inform you, " + name + " that you have passed with a CGPA of " + CGPA + ". " +
-                        "You may now proceed with the registrations.";
+            double roundedGPA = Math.round(moduleController.calcStudentGPA(s, s.getSem()) * 100.0) / 100.0;
+            
+            Optional<Object[]> matchingFailedStudents = failedRows.stream()
+                .filter(p -> p[0].equals(s.getStudentID()))
+                .findFirst();
+            
+
+            String studentEmail = s.getEmail();
+            if(matchingFailedStudents.isPresent()){
+                String bodyText = "We are sorry to inform you, " + name + " that you have failed with a GPA of " + roundedGPA;
                 EmailSender.sendEmail(studentEmail, subject, bodyText);
             }else{
-                String studentEmail = s.getEmail();
-                String subject = "Pass/Fail Notice";
-                String bodyText = "We are sorry to inform you, " + name + " that you have failed with a CGPA of " + CGPA;
+                String bodyText = "We are glad to inform you, " + name + " that you have passed with a GPA of " + roundedGPA + ". " +
+                        "You may now proceed with the registrations.";
                 EmailSender.sendEmail(studentEmail, subject, bodyText);
             }
         }
@@ -115,49 +200,9 @@ public class StudentEligibilityPage extends JFrame {
         }
     }
 
-     private void loadPassedStudentData(){
-        passModel.setRowCount(0);
-
-        for (Student s : moduleController.getAllEnrolledStudents()) {
-            String id = s.getStudentID();
-            String name = s.getFirstName() + " " + s.getLastName();
-            Major major = s.getMajor();
-            double CGPA = moduleController.calcStudentCGPA(s);
-
-            double roundedCGPA = Math.round(CGPA * 100.0) / 100.0;
-
-            // System.out.println(CGPA);
-
-            if (roundedCGPA >= 2.0 && moduleController.canProgressToNextLevel(s)) {
-                passModel.addRow(new Object[]{id, name, major.getMajorName(), roundedCGPA});
-            }
-        }
-    }
-
-    private void loadFailedStudentData() {
-        // Clear existing rows
-        failedModel.setRowCount(0);
-
-        // Add new rows
-        for (Student s : moduleController.getAllEnrolledStudents()) {
-            String id = s.getStudentID();
-            String name = s.getFirstName() + " " + s.getLastName();
-            Major major = s.getMajor();
-            double CGPA = moduleController.calcStudentCGPA(s);
-
-            double roundedCGPA = Math.round(CGPA * 100.0) / 100.0;
-
-            if (roundedCGPA < 2.0 || !moduleController.canProgressToNextLevel(s)) {
-                failedModel.addRow(new Object[]{id, name, major.getMajorName(), roundedCGPA});
-            }
-        }
-    }
 
     private void refreshTable() {
         moduleController = new ModuleController();
-
-        loadPassedStudentData();
-        loadFailedStudentData();
-        JOptionPane.showMessageDialog(this, "Table refreshed!", "Success", JOptionPane.INFORMATION_MESSAGE);
+        loadDataInBackground();
     }
 }

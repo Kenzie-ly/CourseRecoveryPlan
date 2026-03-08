@@ -23,13 +23,14 @@ public class RequirementRepository {
 
             ResultSet rs = statement.executeQuery();
             if (rs.next()) {
-                return new Requirement(
+                Requirement requirement = new Requirement(
                     rs.getString("requirementid"),
                     rs.getString("year"),
                     rs.getString("semester"),
                     rs.getInt("requiredcoursecount"),
                     rs.getInt("requiredcredits")
                 );
+                return requirement;
             }
         } catch (Exception e) {
             e.printStackTrace();

@@ -63,7 +63,6 @@ public class SelectingPlanPage extends JFrame {
         List<RecoveryTask> editedTasks = new ArrayList<>();
 
         for(var task: recoveryTasks){
-            List<RecoveryPlan> newRecoveryPlans = new ArrayList<>();
             JPanel rowPanel = new JPanel();
             rowPanel.setLayout(new BoxLayout(rowPanel, BoxLayout.X_AXIS));
 

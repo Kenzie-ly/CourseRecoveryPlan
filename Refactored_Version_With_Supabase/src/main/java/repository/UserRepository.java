@@ -125,27 +125,27 @@ public class UserRepository {
 
     public static void updateUser(User modifiedUser) {
         String updateString = """
-                    UPDATE user_accounts SET(
-                        username = ?,
+                    UPDATE user_accounts 
+                    SET
                         password = ?, 
                         firstname = ?,
                         lastname = ?,
                         email = ?,
                         role = ?,
                         lastlogin = ?,
-                        lastlogout = ?                   
-                    )
+                        lastlogout = ?                  
+                    WHERE username = ?
                 """;
 
         try(Connection conn = DatabaseManager.getConnection(); PreparedStatement statement = conn.prepareStatement(updateString)){
-            statement.setString(1, modifiedUser.getUsername());
-            statement.setString(2, modifiedUser.getPassword());
-            statement.setString(3, modifiedUser.getFirstName());
-            statement.setString(4, modifiedUser.getLastName());
-            statement.setString(5, modifiedUser.getEmail());
-            statement.setString(6, modifiedUser.getRole());
-            statement.setLong(7, modifiedUser.getLastLogin().getTime());
-            statement.setLong(8, modifiedUser.getLastLogout().getTime());
+            statement.setString(1, modifiedUser.getPassword());
+            statement.setString(2, modifiedUser.getFirstName());
+            statement.setString(3, modifiedUser.getLastName());
+            statement.setString(4, modifiedUser.getEmail());
+            statement.setString(5, modifiedUser.getRole());
+            statement.setLong(6, modifiedUser.getLastLogin().getTime());
+            statement.setLong(7, modifiedUser.getLastLogout().getTime());
+            statement.setString(8, modifiedUser.getUsername());
             statement.executeUpdate();
         }catch(Exception e){
             e.printStackTrace();

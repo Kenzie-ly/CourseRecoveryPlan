@@ -10,7 +10,7 @@ import classes.*;
 
 public class StudentRepository {
 
-    public static List<Student> loadAllStudents() {
+    public static List<Student> loadAllStudents() {        
         List<Student> students = new ArrayList<>();
         String loadString = "Select * FROM students";
         try (Connection conn = DatabaseManager.getConnection(); PreparedStatement statement = conn.prepareStatement(loadString)) {
@@ -66,6 +66,7 @@ public class StudentRepository {
 
         statement.setString(1, student.getStudentID());
         statement.executeUpdate();
+        
     }
 
     public static void updateStudent(Student student) throws Exception {

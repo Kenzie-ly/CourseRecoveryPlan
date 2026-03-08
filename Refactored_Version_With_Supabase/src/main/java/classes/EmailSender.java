@@ -9,8 +9,8 @@ import java.io.File;
 public class EmailSender {
     private static final String host = "smtp.gmail.com";
     private static final String port = "587";
-    private static final String senderEmail = "kenglyn7@gmail.com";
-    private static final String password = "udie82929ndjx929wndnxi";
+    private static final String senderEmail = "vxkenglyn@gmail.com";
+    private static final String password = "gndn hfam agxd zwsb";
 
     public static void sendEmail(String recipientEmail, String subject, String bodyText) {
         Properties properties = new Properties();

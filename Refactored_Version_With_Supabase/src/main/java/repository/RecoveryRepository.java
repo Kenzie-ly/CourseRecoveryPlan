@@ -46,15 +46,19 @@ public class RecoveryRepository {
     }
 
     public static void updateRecoveryPlan(List<RecoveryPlan> modifiedPlans) {
-        String deleteQuery = "DELETE FROM recovery_plans WHERE taskid = ? AND enrollmentid = ?";
+        String deleteQuery = "DELETE FROM recovery_plans WHERE enrollmentid = ?";
         String insertQuery = "INSERT INTO recovery_plans (taskid, enrollmentid) VALUES (?, ?)";
 
         try (Connection conn = DatabaseManager.getConnection(); PreparedStatement deleteStmt = conn.prepareStatement(deleteQuery); PreparedStatement insertStmt = conn.prepareStatement(insertQuery)) {
+            // Delete all plans that are NOT in modifiedPlans
             for (RecoveryPlan plan : modifiedPlans) {
-                deleteStmt.setString(1, plan.getTaskID());
-                deleteStmt.setString(2, plan.getEnrollmentID());
+                System.out.println(plan.getEnrollmentID());
+                deleteStmt.setString(1, plan.getEnrollmentID());
                 deleteStmt.executeUpdate();
+            }
 
+            // Insert the modified plans
+            for (RecoveryPlan plan : modifiedPlans) {
                 insertStmt.setString(1, plan.getTaskID());
                 insertStmt.setString(2, plan.getEnrollmentID());
                 insertStmt.executeUpdate();

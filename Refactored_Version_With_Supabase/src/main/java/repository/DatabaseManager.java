@@ -1,14 +1,34 @@
 package repository;
 import java.sql.Connection;
-import java.sql.DriverManager;
+
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
 public class DatabaseManager {
-    //Java Database Connectivity
-    private static final String URL = "jdbc:postgresql://aws-1-ap-south-1.pooler.supabase.com:6543/postgres?";
-    private static final String USER =  "postgres.zcolpwxxdlhgawzrwkxm";
-    private static final String PASSWORD = "#Kenletken123";
+    private static HikariDataSource dataSource;
 
-    public static Connection getConnection() throws Exception{
-        return DriverManager.getConnection(URL, USER, PASSWORD);
+    static {
+        HikariConfig config = new HikariConfig();
+        
+        // 1. Essential Settings
+        config.setJdbcUrl("jdbc:postgresql://aws-1-ap-south-1.pooler.supabase.com:6543/postgres?prepareThreshold=0");
+        config.setUsername("postgres.zcolpwxxdlhgawzrwkxm");
+        config.setPassword("#Kenletken123");
+
+        // 2. Performance & Sizing
+        config.setMaximumPoolSize(60);
+        config.setIdleTimeout(10000); // 5 minutes
+        config.setMinimumIdle(50);
+        
+        // 3. Recommended optimizations
+        config.addDataSourceProperty("cachePrepStmts", "true");
+        config.addDataSourceProperty("prepStmtCacheSize", "250");
+        config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+
+        dataSource = new HikariDataSource(config);
+    }
+
+    public static Connection getConnection() throws Exception {
+        return dataSource.getConnection();
     }
 }

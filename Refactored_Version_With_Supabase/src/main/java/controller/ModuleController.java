@@ -11,25 +11,32 @@ import repository.*;
 
 public class ModuleController {
     private final List<Course> allCourses = CourseRepository.loadAllCourses();
-    private static Map<String, Double> points = new HashMap<>();
+    private static final Map<String, Double> points = new HashMap<>();
 
     public ModuleController(){
         initGradePoints();
     }
 
-    private static Map<String, Double> initGradePoints() {
-        points.put("A", 4.0);
+    private static void initGradePoints() {
+        points.put("A",  4.0);
         points.put("A-", 3.7);
         points.put("B+", 3.3);
-        points.put("B", 3.0);
+        points.put("B",  3.0);
         points.put("B-", 2.7);
         points.put("C+", 2.3);
-        points.put("C", 2.0);
+        points.put("C",  2.0);
         points.put("C-", 2.0);
-        points.put("D", 1.0);
+        points.put("D",  1.0);
         points.put("D-", 1.0);
-        points.put("F", 0.0);
-        return points;
+        points.put("F",  0.0);
+    }
+
+    /**
+     * Exposed as static so callers (e.g. StudentEligibilityPage) can use
+     * the grade map directly without going through a controller instance.
+     */
+    public static double getGradePoint(String grade) {
+        return points.getOrDefault(grade, 0.0);
     }
 
     public List<Student> getAllEnrolledStudents(){
@@ -41,55 +48,71 @@ public class ModuleController {
     }
 
     public List<Course> getAllCoursesTakenByFailedStudents(){
-        List<Course> existedCourses = this.getCourseOfRecoveryPlans();
-        Set<String> existedCourseIds = existedCourses.stream()
-                .map(Course::getCourseID)
-                .collect(Collectors.toSet());
-
-        return EnrollmentRepository.getAllCoursesTakenByFailedStudents().stream()
-                .filter(c -> !existedCourseIds.contains(c.getCourseID()))
-                .toList();
+        return EnrollmentRepository.getCoursesPendingRecoveryPlan();
     }
 
+    // --- Original versions (kept for backward compatibility with other callers) ---
+
     public boolean canProgressToNextLevel(Student student) {
-        List<Enrollement> enrollements =  EnrollmentRepository.getStudentEnrollments(student);
-        int totalTakenCourses = enrollements.size();
-        int failedCourseCount = Math.abs(RequirementRepository.findRequirement(student.getMajor(),student.getYear(), student.getSem()).getRequiredCourseCount() - totalTakenCourses);
-        
-        for(var enrollement: enrollements){
-            if(enrollement.getGrade().matches("[DEF][+-]?")){
-                failedCourseCount += 1;
-            }
-        }
-        // Can progress if 3 or fewer failed courses
-        return failedCourseCount <= 3;
+        List<Enrollement> enrollements = EnrollmentRepository.getStudentEnrollments(student);
+        return canProgressToNextLevel(student, enrollements);
     }
 
     public double calcStudentCGPA(Student student){
-        double grades = 0;
-        for(var enrollement :EnrollmentRepository.getStudentEnrollments(student)){
-            grades = grades + points.get(enrollement.getGrade());
-        }
+        List<Enrollement> enrollements = EnrollmentRepository.getStudentEnrollments(student);
+        return calcStudentCGPA(student, enrollements);
+    }
 
-        return grades/(RequirementRepository.findRequirement(student.getMajor(), student.getYear(), student.getSem())).getRequiredCourseCount();
+    // --- Optimized overloads that accept pre-fetched enrollments (avoid extra DB hit) ---
+
+    public boolean canProgressToNextLevel(Student student, List<Enrollement> enrollements) {
+        Requirement req = RequirementRepository.findRequirement(
+                student.getMajor(), student.getYear(), student.getSem());
+        if (req == null) return false;
+
+        int failedCourseCount = Math.abs(req.getRequiredCourseCount() - enrollements.size());
+        for (Enrollement enrollement : enrollements) {
+            if (enrollement.getGrade().matches("[DEF][+-]?")) {
+                failedCourseCount++;
+            }
+        }
+        return failedCourseCount <= 3;
+    }
+
+    public double calcStudentCGPA(Student student, List<Enrollement> enrollements) {
+        Requirement req = RequirementRepository.findRequirement(
+                student.getMajor(), student.getYear(), student.getSem());
+
+        double grades = 0;
+        for (Enrollement enrollement : enrollements) {
+            grades += points.getOrDefault(enrollement.getGrade(), 0.0) * enrollement.getCourse().getCredits();
+        }
+        
+        if (student.getSem().equalsIgnoreCase("Semester 2")) {
+            Requirement secondRequirement = RequirementRepository.findRequirement(
+                student.getMajor(), student.getYear(), "Semester 1");
+            return grades/(req.getRequiredCredits() + secondRequirement.getRequiredCredits());
+        }
+        return grades/req.getRequiredCredits();
     }
 
     public double calcStudentGPA(Student student, String sem){
         double grades = 0;
-        for(var enrollement :EnrollmentRepository.getStudentEnrollmentsBySem(student, sem)){
-            grades = grades + points.get(enrollement.getGrade());
+        for(var enrollement : EnrollmentRepository.getStudentEnrollmentsBySem(student, sem)){
+            grades = grades + (points.getOrDefault(enrollement.getGrade(), 0.0) * enrollement.getCourse().getCredits());
         }
-
-        return grades/(RequirementRepository.findRequirement(student.getMajor(), student.getYear(), student.getSem())).getRequiredCourseCount();
+        Requirement req = RequirementRepository.findRequirement(
+                student.getMajor(), student.getYear(), student.getSem());
+        
+        return grades / req.getRequiredCredits();
     }
 
     public List<Enrollement> getPassedEnrollmentBasedOnCourse(Course course){
         List<Enrollement> enrollements = EnrollmentRepository.findGradeBasedOnCourse(course);
         if(enrollements != null){
-            List<Enrollement> passedEnrollements = enrollements.stream()
-                .filter(enrollement -> enrollement.getGrade().matches("[DEF][+-]?")) // Keep only passing grades
+            return enrollements.stream()
+                .filter(enrollement -> enrollement.getGrade().matches("[DEF][+-]?"))
                 .collect(Collectors.toList());
-            return passedEnrollements;
         }
         return null;
     }
@@ -111,7 +134,6 @@ public class ModuleController {
 
         if (failedEnrollements != null && !failedEnrollements.isEmpty()){
             List<RecoveryPlan> recoveryPlans = new ArrayList<>();
-            
             for (var enrollement: failedEnrollements){
                 recoveryPlans.add(new RecoveryPlan(selectedRecoveryTask, enrollement));
             }
@@ -143,7 +165,7 @@ public class ModuleController {
                     }
                     return plan.getEnrollement().getCourse();
                 })
-                .filter(course -> course != null) 
+                .filter(course -> course != null)
                 .collect(Collectors.toSet());
 
         if (coursesInPlans.isEmpty()) {
@@ -151,11 +173,9 @@ public class ModuleController {
             return new ArrayList<>();
         }
 
-        List<Course> filteredCourses = allCourses.stream()
+        return allCourses.stream()
                 .filter(coursesInPlans::contains)
                 .collect(Collectors.toList());
-
-        return filteredCourses;
     }
 
     public List<RecoveryPlan> getRecoveryPlansByCourse(Course course){

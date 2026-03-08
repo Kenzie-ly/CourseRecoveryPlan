@@ -19,7 +19,6 @@ public class UserManagementPage extends JFrame {
     JButton undoBtn;
     private Timer undoTimer;
     private User recentDeletedUser;
-    private static final int timeout = 20000;
 
     public UserManagementPage(LoginController session){
         this.session = session;
