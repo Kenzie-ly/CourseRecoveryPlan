@@ -7,6 +7,9 @@ import controller.LoginController;
 import controller.ModuleController;
 
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.Optional;
+import java.util.List;
 
 public class StudentEligibilityPage extends JFrame {
     private LoginController session;
@@ -15,6 +18,7 @@ public class StudentEligibilityPage extends JFrame {
     private JTable jTablePass;
     private JTable jTableFailed;
     private ModuleController moduleController;
+    private List<Object[]> failedRows;
 
     public StudentEligibilityPage(LoginController session) {
         this.session = session;
@@ -86,19 +90,23 @@ public class StudentEligibilityPage extends JFrame {
     }
 
     private void sendEmailNotificationPass() {
+        String subject = "Pass/Fail Notice";
         for (Student s : moduleController.getAllEnrolledStudents()) {
             String name = s.getFirstName() + " " + s.getLastName();
-            double CGPA = moduleController.calcStudentCGPA(s);
-            if(CGPA >= 2.0){
-                String studentEmail = s.getEmail();
-                String subject = "Pass/Fail Notice";
-                String bodyText = "We are glad to inform you, " + name + " that you have passed with a CGPA of " + CGPA + ". " +
-                        "You may now proceed with the registrations.";
+            double roundedGPA = Math.round(moduleController.calcStudentGPA(s, s.getSem()) * 100.0) / 100.0;
+            
+            Optional<Object[]> matchingFailedStudents = failedRows.stream()
+                .filter(p -> p[0].equals(s.getStudentID()))
+                .findFirst();
+            
+
+            String studentEmail = s.getEmail();
+            if(matchingFailedStudents.isPresent()){
+                String bodyText = "We are sorry to inform you, " + name + " that you have failed with a GPA of " + roundedGPA;
                 EmailSender.sendEmail(studentEmail, subject, bodyText);
             }else{
-                String studentEmail = s.getEmail();
-                String subject = "Pass/Fail Notice";
-                String bodyText = "We are sorry to inform you, " + name + " that you have failed with a CGPA of " + CGPA;
+                String bodyText = "We are glad to inform you, " + name + " that you have passed with a GPA of " + roundedGPA + ". " +
+                        "You may now proceed with the registrations.";
                 EmailSender.sendEmail(studentEmail, subject, bodyText);
             }
         }
@@ -117,6 +125,7 @@ public class StudentEligibilityPage extends JFrame {
 
      private void loadPassedStudentData(){
         passModel.setRowCount(0);
+        this.failedRows = new ArrayList<>();
 
         for (Student s : moduleController.getAllEnrolledStudents()) {
             String id = s.getStudentID();
@@ -130,6 +139,7 @@ public class StudentEligibilityPage extends JFrame {
 
             if (roundedCGPA >= 2.0 && moduleController.canProgressToNextLevel(s)) {
                 passModel.addRow(new Object[]{id, name, major.getMajorName(), roundedCGPA});
+                failedRows.add(new Object[]{id, name, major.getMajorName(), roundedCGPA});
             }
         }
     }
