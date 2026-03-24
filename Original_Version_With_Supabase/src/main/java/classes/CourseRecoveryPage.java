@@ -8,6 +8,7 @@ import controller.ModuleController;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CourseRecoveryPage extends JFrame {
     private LoginController session;
@@ -17,14 +18,17 @@ public class CourseRecoveryPage extends JFrame {
     private JPanel mainPanel;
     private JPanel inputPanel;
     private JPanel bottomPanel;
+    private JTextField searchField;
 
-    public CourseRecoveryPage(LoginController session) { // Load all students first
+    public CourseRecoveryPage(LoginController session) {
+        //main page
         this.session = session;
         this.moduleController = new ModuleController();
         this.initFrame();
     }
 
-    public CourseRecoveryPage(LoginController session, boolean detailedPage) { // Load all students first
+    public CourseRecoveryPage(LoginController session, boolean detailedPage) { 
+        //detail course page
         this.session = session;
         this.moduleController = new ModuleController();
         this.detailedPage = detailedPage;
@@ -171,34 +175,73 @@ public class CourseRecoveryPage extends JFrame {
         bottomPanel.repaint();
     }
 
-    private void showRecoveryPlans(){
+    private void filterRecoveryPlan() {
+        //reset the page
+        studentPanel.removeAll();
         List<Course> courses = moduleController.getCourseOfRecoveryPlans();
-        studentPanel.setLayout(new GridLayout(courses.size()/4, 4, 10, 10));
-        for(var course : courses){
+        
+        //not affected even if .removeall()
+        studentPanel.setLayout(new GridLayout(courses.size()/2, 4, 10, 10));
+        
+        String searchText;
+        if(searchField == null){
+            searchText = "";
+        }else{
+            searchText = searchField.getText().toLowerCase();    
+        }
+        
+        
+
+        List<Course> filtered = courses.stream().filter(course -> {
+            if (searchText.isEmpty()) {
+                        return true;
+            }
+
+            String name = course.getCourseName().toLowerCase();
+            return name.contains(searchText);
+        }).collect(Collectors.toList());
+
+        if (filtered.isEmpty()) {
             JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.CENTER));
-            JButton button = new JButton(course.getCourseName());
-            button.setPreferredSize(new Dimension(180, 100));
-            wrapper.add(button);
+            JLabel nothingOutput = new JLabel("No users found");
+            nothingOutput.setAlignmentX(Component.CENTER_ALIGNMENT);
+            wrapper.add(nothingOutput);
             studentPanel.add(wrapper);
-            button.addActionListener(e -> {
-                showAction(e, course);
-                detailedPage= true;
+        } else {
+            for (Course course : filtered) {
+                JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.CENTER));
+                JButton button = new JButton(course.getCourseName());
+                button.setPreferredSize(new Dimension(180, 100));
+                wrapper.add(button);
+                studentPanel.add(wrapper);
+                button.addActionListener(e -> {
+                    showAction(e, course);
+                    detailedPage= true;
+                });
+            }
+
+            JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.CENTER));
+            JButton createButton = new JButton("Create Recovery Plan");
+            createButton.setPreferredSize(new Dimension(180, 100));
+            wrapper.add(createButton);
+            studentPanel.add(wrapper);
+
+            createButton.addActionListener(e -> {
+                new CourseRecoveryPage(session, true).setVisible(true);
+                this.dispose();
             });
         }
 
-        JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        JButton createButton = new JButton("Create Recovery Plan");
-        createButton.setPreferredSize(new Dimension(180, 100));
-        wrapper.add(createButton);
-        studentPanel.add(wrapper);
+        studentPanel.revalidate();
+        studentPanel.repaint();
+    }
 
-        createButton.addActionListener(e -> {
-            new CourseRecoveryPage(session, true).setVisible(true);
-            this.dispose();
-        });
+    //show all recovery plans in main page
+    private void showRecoveryPlans(){
+        filterRecoveryPlan();
 
         this.bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));// search bar
-        JTextField searchField = new JTextField(20);
+        this.searchField = new JTextField(20);
         JButton searchBtn = new JButton("Search");
         JButton clearBtn = new JButton("Clear");
 
@@ -208,6 +251,11 @@ public class CourseRecoveryPage extends JFrame {
         bottomPanel.add(clearBtn);
 
         mainPanel.add(bottomPanel, BorderLayout.SOUTH);
+        searchBtn.addActionListener(e -> filterRecoveryPlan());
+        clearBtn.addActionListener(e -> {
+            searchField.setText("");
+            filterRecoveryPlan();
+        });
     }
 
     private void goBack() //Navigation
@@ -225,10 +273,6 @@ public class CourseRecoveryPage extends JFrame {
                 this.dispose();
             }  
         }
-        // else if (role.equals("AcademicOfficer"))
-        // {
-        //     new AcademicOfficerPage(session).setVisible(true);
-        // }
     }
 
     private void initFrame() { // The page layout setup

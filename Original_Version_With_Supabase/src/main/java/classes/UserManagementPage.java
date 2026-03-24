@@ -251,7 +251,7 @@ public class UserManagementPage extends JFrame {
 
             session.addNewUser(user);
             dialog.dispose();
-            filterUsers();//stil don't know
+            filterUsers();
         });
 
         btnPanel.add(addbtn);
