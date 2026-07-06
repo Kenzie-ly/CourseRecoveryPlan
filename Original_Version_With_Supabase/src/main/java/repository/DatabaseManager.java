@@ -16,9 +16,9 @@ public class DatabaseManager {
         config.setPassword("#Kenletken123");
 
         // 2. Performance & Sizing
-        config.setMaximumPoolSize(60);
-        config.setIdleTimeout(10000); // 5 minutes
-        config.setMinimumIdle(50);
+        config.setMaximumPoolSize(10);
+        config.setIdleTimeout(300000); // 5 minutes
+        config.setMinimumIdle(2);
         
         // 3. Recommended optimizations
         config.addDataSourceProperty("cachePrepStmts", "true");

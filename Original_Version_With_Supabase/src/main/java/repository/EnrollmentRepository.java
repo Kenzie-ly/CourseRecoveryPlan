@@ -15,13 +15,25 @@ public class EnrollmentRepository {
 
     public static List<Course> getAllCoursesTakenByFailedStudents(){
         Set<Course> uniqueCourse = new HashSet<>();
-        String findString = "SELECT * FROM student_grades WHERE grade ~ '^[DEF][+-]?$'";
+        String findString = """
+            SELECT DISTINCT c.courseid, c.coursename, c.credits, c.semester, c.instructor, c.capacity, c.majorid
+            FROM courses c
+            JOIN student_grades sg ON c.courseid = sg.courseid
+            WHERE sg.grade ~ '^[DEF][+-]?$'
+        """;
 
         try (Connection conn = DatabaseManager.getConnection(); PreparedStatement statement = conn.prepareStatement(findString)){
             ResultSet rs = statement.executeQuery();
             while (rs.next()) {
-                Course course = CourseRepository.findCoursesByID(rs.getString("courseid"));
-                uniqueCourse.add(course);
+                uniqueCourse.add(new Course(
+                    rs.getString("courseid"),
+                    rs.getString("coursename"),
+                    rs.getInt("credits"),
+                    rs.getString("semester"),
+                    rs.getString("instructor"),
+                    rs.getInt("capacity"),
+                    rs.getString("majorid")
+                ));
             }
         }catch(Exception e){
             e.printStackTrace();
@@ -66,9 +78,10 @@ public class EnrollmentRepository {
         List<Student> students = new ArrayList<>();
         String query = """
             SELECT DISTINCT s.studentid, s.firstname, s.lastname, 
-                            s.major, s.year, s.semester, s.email
+                            s.major, m.majorid, s.year, s.semester, s.email
             FROM students s
             INNER JOIN student_grades sg ON s.studentid = sg.studentid
+            LEFT JOIN majors m ON s.major = m.majorname
         """;
 
         try (Connection conn = DatabaseManager.getConnection();
@@ -76,11 +89,14 @@ public class EnrollmentRepository {
 
             ResultSet rs = statement.executeQuery();
             while (rs.next()) {
+                String majorName = rs.getString("major");
+                String majorId = rs.getString("majorid");
+                Major major = (majorName != null) ? new Major(majorId, majorName) : null;
                 Student student = new Student(
                     rs.getString("studentid"),
                     rs.getString("firstname"),
                     rs.getString("lastname"),
-                    CourseRepository.findMajorByName(rs.getString("major")),
+                    major,
                     rs.getString("year"),
                     rs.getString("semester"),
                     rs.getString("email")
@@ -134,12 +150,25 @@ public class EnrollmentRepository {
 
     public static List<Course> findCoursesTakenByStudents(Student student){
         List<Course> courses = new ArrayList<>();
-        String findString = "SELECT * FROM student_grades WHERE studentid = ?"; // note: original had typo "studen_grades"
+        String findString = """
+            SELECT c.courseid, c.coursename, c.credits, c.semester, c.instructor, c.capacity, c.majorid
+            FROM student_grades sg
+            JOIN courses c ON sg.courseid = c.courseid
+            WHERE sg.studentid = ?
+        """;
         try (Connection conn = DatabaseManager.getConnection(); PreparedStatement statement = conn.prepareStatement(findString)) {
             statement.setString(1, student.getStudentID());
             ResultSet rs = statement.executeQuery(); 
             while (rs.next()) {
-                courses.add(CourseRepository.findCoursesByID(rs.getString("courseid")));
+                courses.add(new Course(
+                    rs.getString("courseid"),
+                    rs.getString("coursename"),
+                    rs.getInt("credits"),
+                    rs.getString("semester"),
+                    rs.getString("instructor"),
+                    rs.getInt("capacity"),
+                    rs.getString("majorid")
+                ));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -149,12 +178,31 @@ public class EnrollmentRepository {
 
     public static List<Enrollement> getStudentEnrollments(Student student){
         List<Enrollement> enrollements = new ArrayList<>();
-        String findString = "SELECT * FROM student_grades WHERE studentid = ?";
+        String findString = """
+            SELECT sg.enrollmentid, sg.grade, c.courseid, c.coursename, c.credits, c.semester, c.instructor, c.capacity, c.majorid
+            FROM student_grades sg
+            JOIN courses c ON sg.courseid = c.courseid
+            WHERE sg.studentid = ?
+        """;
         try (Connection conn = DatabaseManager.getConnection(); PreparedStatement statement = conn.prepareStatement(findString)) {
             statement.setString(1, student.getStudentID());
             ResultSet rs = statement.executeQuery();
             while (rs.next()) {
-                    enrollements.add(new Enrollement(rs.getString("enrollmentid"), student, CourseRepository.findCoursesByID(rs.getString("courseid")), rs.getString("grade")));
+                Course course = new Course(
+                    rs.getString("courseid"),
+                    rs.getString("coursename"),
+                    rs.getInt("credits"),
+                    rs.getString("semester"),
+                    rs.getString("instructor"),
+                    rs.getInt("capacity"),
+                    rs.getString("majorid")
+                );
+                enrollements.add(new Enrollement(
+                    rs.getString("enrollmentid"),
+                    student,
+                    course,
+                    rs.getString("grade")
+                ));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -189,16 +237,35 @@ public class EnrollmentRepository {
 
     public static List<Enrollement> findGradeBasedOnCourse(Course course) {
         List<Enrollement> enrollments = new ArrayList<>();
-        String query = "SELECT * FROM student_grades WHERE courseid = ?";
+        String query = """
+            SELECT sg.enrollmentid, sg.grade, sg.studentid,
+                   s.firstname, s.lastname, s.major, m.majorid, s.year, s.semester, s.email
+            FROM student_grades sg
+            JOIN students s ON sg.studentid = s.studentid
+            LEFT JOIN majors m ON s.major = m.majorname
+            WHERE sg.courseid = ?
+        """;
 
         try (Connection conn = DatabaseManager.getConnection(); PreparedStatement statement = conn.prepareStatement(query)) {
             statement.setString(1, course.getCourseID());
             ResultSet rs = statement.executeQuery();
             while (rs.next()) {
+                String majorName = rs.getString("major");
+                String majorId = rs.getString("majorid");
+                Major major = (majorName != null) ? new Major(majorId, majorName) : null;
+                Student student = new Student(
+                    rs.getString("studentid"),
+                    rs.getString("firstname"),
+                    rs.getString("lastname"),
+                    major,
+                    rs.getString("year"),
+                    rs.getString("semester"),
+                    rs.getString("email")
+                );
                 Enrollement enrollment = new Enrollement(
                     rs.getString("enrollmentid"),
-                    StudentRepository.findStudentByStudentID(rs.getString("studentid")),
-                    CourseRepository.findCoursesByID(rs.getString("courseid")),
+                    student,
+                    course,
                     rs.getString("grade")
                 );
                 enrollments.add(enrollment);
@@ -213,16 +280,46 @@ public class EnrollmentRepository {
     
 
     public static Enrollement findEnrollmentByID(String id) {
-        String query = "SELECT * FROM student_grades WHERE enrollmentid = ?";
+        String query = """
+            SELECT sg.enrollmentid, sg.grade, sg.studentid, sg.courseid,
+                   s.firstname, s.lastname, s.major, m.majorid, s.year, s.semester, s.email,
+                   c.coursename, c.credits, c.semester AS course_sem, c.instructor, c.capacity, c.majorid AS course_majorid
+            FROM student_grades sg
+            JOIN students s ON sg.studentid = s.studentid
+            LEFT JOIN majors m ON s.major = m.majorname
+            JOIN courses c ON sg.courseid = c.courseid
+            WHERE sg.enrollmentid = ?
+        """;
 
         try (Connection conn = DatabaseManager.getConnection(); PreparedStatement statement = conn.prepareStatement(query)) {
             statement.setString(1, id);
             ResultSet rs = statement.executeQuery();
             if (rs.next()) {
+                String majorName = rs.getString("major");
+                String majorId = rs.getString("majorid");
+                Major major = (majorName != null) ? new Major(majorId, majorName) : null;
+                Student student = new Student(
+                    rs.getString("studentid"),
+                    rs.getString("firstname"),
+                    rs.getString("lastname"),
+                    major,
+                    rs.getString("year"),
+                    rs.getString("semester"),
+                    rs.getString("email")
+                );
+                Course course = new Course(
+                    rs.getString("courseid"),
+                    rs.getString("coursename"),
+                    rs.getInt("credits"),
+                    rs.getString("course_sem"),
+                    rs.getString("instructor"),
+                    rs.getInt("capacity"),
+                    rs.getString("course_majorid")
+                );
                 return new Enrollement(
                     rs.getString("enrollmentid"),
-                    StudentRepository.findStudentByStudentID(rs.getString("studentid")),
-                    CourseRepository.findCoursesByID(rs.getString("courseid")),
+                    student,
+                    course,
                     rs.getString("grade")
                 );
             }
